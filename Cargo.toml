@@ -1,0 +1,6 @@
+[package]
+name = "movie_maker"
+version = "0.1.0"
+authors = ["greg <gperlman27@gmail.com>"]
+
+[dependencies]
