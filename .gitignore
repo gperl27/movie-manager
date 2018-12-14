@@ -1,4 +1,3 @@
 /target
 **/*.rs.bk
-/client/index.html
 /client/elm-stuff

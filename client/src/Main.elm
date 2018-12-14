@@ -1,23 +1,72 @@
+port module Main exposing (main)
+
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (..)
+import Html.Events exposing (..)
+
+
+
+-- Main
+
 
 main =
-  Browser.sandbox { init = 0, update = update, view = view }
+    Browser.element
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
 
-type Msg = Increment | Decrement
 
+
+-- Model
+
+
+type alias Movie =
+    { file : String }
+
+
+type alias Model =
+    { movies: List Movie }
+
+
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( Model []
+    , Cmd.none
+    )
+
+
+
+-- Update
+
+
+type Msg
+    = ChooseFolder
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Increment ->
-      model + 1
+    case msg of
+        ChooseFolder ->
+            ( model, toBackEnd "openFolder" )
 
-    Decrement ->
-      model - 1
 
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+    
+-- VIEW
+
+
+view : Model -> Html Msg
 view model =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [] [ text (String.fromInt model) ]
-    , button [ onClick Increment ] [ text "+" ]
-    ]
+    div []
+        [ button [ onClick ChooseFolder ] [ text "Choose Folder" ]
+        ]
+
+port toBackEnd : String -> Cmd msg
