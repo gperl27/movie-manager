@@ -1,12 +1,14 @@
+extern crate glob;
 extern crate web_view;
-use std::env;
+
+use glob::glob;
 use web_view::*;
 
 fn main() {
     let webview = web_view::builder()
         .title("Movie Manager")
         .content(Content::Html(create_html()))
-        .size(320, 480)
+        .size(800, 800)
         .resizable(true)
         .debug(true)
         .user_data(())
@@ -19,7 +21,14 @@ fn main() {
                     .dialog()
                     .choose_directory("Please choose a folder...", "")?
                 {
-                    Some(path) => println!("Folder at {}", path.to_string_lossy()),
+                    Some(path) => {
+                        let mut path = path.into_os_string().into_string().unwrap();
+                        &path.push_str("/*.*");
+
+                        for entry in glob(&path).unwrap() {
+                            println!("{}", entry.unwrap().display());
+                        }
+                    }
                     None => println!("Cancelled opening folder"),
                 },
                 _ => {
