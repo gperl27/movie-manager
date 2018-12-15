@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as JD exposing (field, Decoder, int, string)
 import Json.Encode as JE exposing (Value)
@@ -26,13 +27,14 @@ type alias Movie =
 
 
 type alias Model =
-    { movies: List Movie } 
+    { movies: List Movie, search: String } 
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( {
-        movies = []
+        movies = [],
+        search = ""
     } 
     , Cmd.none
     )
@@ -44,17 +46,37 @@ init _ =
 
 type Msg
     = ChooseFolder
-    | Search
+    | Search String
     | JSONData (List Movie)
+
+sendOpenFolder: Cmd Msg
+sendOpenFolder =
+    let
+        json = JE.object [("_type", JE.string "OpenFolder")]
+        str = JE.encode 0 json
+    in
+        toBackEnd str
+
+sendSearch: String -> Cmd Msg
+sendSearch keyword =
+    let
+        json = JE.object [("_type", JE.string "Search"),
+                          ("keyword", JE.string keyword)
+                         ]
+                                                       
+        str = JE.encode 0 json
+    in
+        toBackEnd str
+    
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChooseFolder ->
-            ( model, toBackEnd "openFolder" )
-        Search ->
-            ( model, toBackEnd "search" )
+            ( model, sendOpenFolder )
+        Search str->
+            ({ model | search = str}, sendSearch str )
         JSONData data ->
             ({ model | movies = data }, Cmd.none )        
 
@@ -85,7 +107,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ button [ onClick ChooseFolder ] [ text "Choose Folder" ],
-          button [ onClick Search ] [ text "search" ],
+        --   button [ onClick Search ] [ text "search" ],
+          input [ placeholder "Text to reverse", value model.search, onInput Search ] [],
           ul [] (List.map (\l -> li [] [ text l.filename ]) model.movies)
         ]
 

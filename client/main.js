@@ -4789,7 +4789,7 @@ var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		{movies: _List_Nil},
+		{movies: _List_Nil, search: ''},
 		elm$core$Platform$Cmd$none);
 };
 var author$project$Main$JSONData = function (a) {
@@ -4827,17 +4827,56 @@ var author$project$Main$subscriptions = function (model) {
 };
 var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$toBackEnd = _Platform_outgoingPort('toBackEnd', elm$json$Json$Encode$string);
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var author$project$Main$sendOpenFolder = function () {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('OpenFolder'))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
+}();
+var author$project$Main$sendSearch = function (keyword) {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('Search')),
+				_Utils_Tuple2(
+				'keyword',
+				elm$json$Json$Encode$string(keyword))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
+};
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'ChooseFolder':
-				return _Utils_Tuple2(
-					model,
-					author$project$Main$toBackEnd('openFolder'));
+				return _Utils_Tuple2(model, author$project$Main$sendOpenFolder);
 			case 'Search':
+				var str = msg.a;
 				return _Utils_Tuple2(
-					model,
-					author$project$Main$toBackEnd('search'));
+					_Utils_update(
+						model,
+						{search: str}),
+					author$project$Main$sendSearch(str));
 			default:
 				var data = msg.a;
 				return _Utils_Tuple2(
@@ -4848,7 +4887,9 @@ var author$project$Main$update = F2(
 		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};
-var author$project$Main$Search = {$: 'Search'};
+var author$project$Main$Search = function (a) {
+	return {$: 'Search', a: a};
+};
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -4937,10 +4978,20 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 };
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$input = _VirtualDom_node('input');
 var elm$html$Html$li = _VirtualDom_node('li');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$ul = _VirtualDom_node('ul');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -4957,6 +5008,37 @@ var elm$html$Html$Events$onClick = function (msg) {
 		elm$html$Html$Events$on,
 		'click',
 		elm$json$Json$Decode$succeed(msg));
+};
+var elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
+	});
+var elm$html$Html$Events$targetValue = A2(
+	elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	elm$json$Json$Decode$string);
+var elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysStop,
+			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
 };
 var author$project$Main$view = function (model) {
 	return A2(
@@ -4975,15 +5057,14 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$text('Choose Folder')
 					])),
 				A2(
-				elm$html$Html$button,
+				elm$html$Html$input,
 				_List_fromArray(
 					[
-						elm$html$Html$Events$onClick(author$project$Main$Search)
+						elm$html$Html$Attributes$placeholder('Text to reverse'),
+						elm$html$Html$Attributes$value(model.search),
+						elm$html$Html$Events$onInput(author$project$Main$Search)
 					]),
-				_List_fromArray(
-					[
-						elm$html$Html$text('search')
-					])),
+				_List_Nil),
 				A2(
 				elm$html$Html$ul,
 				_List_Nil,
