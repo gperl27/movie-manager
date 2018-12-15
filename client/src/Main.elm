@@ -47,6 +47,7 @@ init _ =
 type Msg
     = ChooseFolder
     | Search String
+    | Play Movie
     | JSONData (List Movie)
 
 sendOpenFolder: Cmd Msg
@@ -68,7 +69,20 @@ sendSearch keyword =
     in
         toBackEnd str
     
+sendPlayMovie: Movie -> Cmd Msg
+sendPlayMovie movie =
+    let
+        json = JE.object [("_type", JE.string "Play"),
+                          ("movie", JE.object [ 
+                              ("filename", JE.string movie.filename),
+                              ("filepath", JE.string movie.filepath)
+                          ])
 
+                         ]
+                                                       
+        str = JE.encode 0 json
+    in
+        toBackEnd str
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -77,6 +91,8 @@ update msg model =
             ( model, sendOpenFolder )
         Search str->
             ({ model | search = str}, sendSearch str )
+        Play movie ->
+            ( model, sendPlayMovie movie )
         JSONData data ->
             ({ model | movies = data }, Cmd.none )        
 
@@ -107,9 +123,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ button [ onClick ChooseFolder ] [ text "Choose Folder" ],
-        --   button [ onClick Search ] [ text "search" ],
           input [ placeholder "Text to reverse", value model.search, onInput Search ] [],
-          ul [] (List.map (\l -> li [] [ text l.filename ]) model.movies)
+          ul [] (List.map (\l -> li [] [ text l.filename, button [ onClick ( Play l )] [ text "Play" ]]) model.movies)
         ]
 
 movieDecoder : Decoder Movie

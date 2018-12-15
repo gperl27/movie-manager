@@ -4851,6 +4851,29 @@ var author$project$Main$sendOpenFolder = function () {
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
 	return author$project$Main$toBackEnd(str);
 }();
+var author$project$Main$sendPlayMovie = function (movie) {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('Play')),
+				_Utils_Tuple2(
+				'movie',
+				elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'filename',
+							elm$json$Json$Encode$string(movie.filename)),
+							_Utils_Tuple2(
+							'filepath',
+							elm$json$Json$Encode$string(movie.filepath))
+						])))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
+};
 var author$project$Main$sendSearch = function (keyword) {
 	var json = elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -4877,6 +4900,11 @@ var author$project$Main$update = F2(
 						model,
 						{search: str}),
 					author$project$Main$sendSearch(str));
+			case 'Play':
+				var movie = msg.a;
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$sendPlayMovie(movie));
 			default:
 				var data = msg.a;
 				return _Utils_Tuple2(
@@ -4887,6 +4915,9 @@ var author$project$Main$update = F2(
 		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};
+var author$project$Main$Play = function (a) {
+	return {$: 'Play', a: a};
+};
 var author$project$Main$Search = function (a) {
 	return {$: 'Search', a: a};
 };
@@ -5076,7 +5107,18 @@ var author$project$Main$view = function (model) {
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text(l.filename)
+									elm$html$Html$text(l.filename),
+									A2(
+									elm$html$Html$button,
+									_List_fromArray(
+										[
+											elm$html$Html$Events$onClick(
+											author$project$Main$Play(l))
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text('Play')
+										]))
 								]));
 					},
 					model.movies))

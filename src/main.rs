@@ -1,4 +1,5 @@
 extern crate glob;
+extern crate open;
 
 #[macro_use]
 extern crate serde_derive;
@@ -12,6 +13,14 @@ use web_view::*;
 
 struct State {
     files: Box<Vec<Movie>>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(tag = "_type")]
+enum Action {
+    OpenFolder,
+    Search { keyword: String },
+    Play { movie: Movie },
 }
 
 impl State {
@@ -57,8 +66,8 @@ fn main() {
         .debug(true)
         .user_data(())
         .invoke_handler(|webview, arg| {
-            match arg {
-                "openFolder" => match webview
+            match serde_json::from_str(arg) {
+                Ok(Action::OpenFolder) => match webview
                     .dialog()
                     .choose_directory("Please choose a folder...", "")?
                 {
@@ -77,23 +86,15 @@ fn main() {
                     }
                     None => println!("Cancelled opening folder"),
                 },
-                "search" => {
-                    // let files = state.search_files("Sample");
-                    send_to_ui(webview, &state.search_files("Sample"));
+                Ok(Action::Search { keyword }) => {
+                    send_to_ui(webview, &state.search_files(&keyword));
                 }
-                _ => {
-                    println!("got an ipc but doesnt match");
+                Ok(Action::Play { movie }) => {
+                    movie.play();
                 }
-            };
 
-            // let state = webview.user_data_mut();
-            // let movies = state.get_files();
-            // // println!("{:?}", movies.get_files());
-            // {
-
-            // send_to_ui(webview, movies);
-            // }
-
+                Err(error) => println!("Unable to parse [{}] because {}", arg, error),
+            }
             Ok(())
         }).build()
         .unwrap();
@@ -101,7 +102,7 @@ fn main() {
     webview.run().unwrap();
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Movie {
     filepath: String,
     filename: String,
@@ -113,6 +114,12 @@ impl Movie {
         let filename = String::from(entry.file_name().unwrap().to_str().unwrap());
 
         Movie { filepath, filename }
+    }
+
+    fn play(&self) {
+        if open::that(&self.filepath).is_ok() {
+            println!("Opening file...");
+        }
     }
 }
 
