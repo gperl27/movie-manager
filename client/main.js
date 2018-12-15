@@ -4310,9 +4310,6 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Main$Model = function (movies) {
-	return {movies: movies};
-};
 var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$True = {$: 'True'};
 var elm$core$Result$isOk = function (result) {
@@ -4792,103 +4789,58 @@ var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		author$project$Main$Model(_List_Nil),
+		{movies: _List_Nil},
 		elm$core$Platform$Cmd$none);
 };
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
+var author$project$Main$JSONData = function (a) {
+	return {$: 'JSONData', a: a};
+};
+var author$project$Main$Movie = function (file) {
+	return {file: file};
+};
+var elm$json$Json$Decode$field = _Json_decodeField;
+var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$string = _Json_decodeString;
+var author$project$Main$movieDecoder = A2(
+	elm$json$Json$Decode$map,
+	author$project$Main$Movie,
+	A2(elm$json$Json$Decode$field, 'file', elm$json$Json$Decode$string));
+var elm$json$Json$Decode$list = _Json_decodeList;
+var author$project$Main$movieListDecoder = elm$json$Json$Decode$list(author$project$Main$movieDecoder);
+var elm$json$Json$Decode$decodeValue = _Json_run;
+var author$project$Main$decodeValue = function (raw) {
+	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$movieListDecoder, raw);
+	if (_n0.$ === 'Ok') {
+		var movies = _n0.a;
+		return author$project$Main$JSONData(movies);
+	} else {
+		var error = _n0.a;
+		return author$project$Main$JSONData(_List_Nil);
+	}
+};
+var elm$json$Json$Decode$value = _Json_decodeValue;
+var author$project$Main$toFrontEnd = _Platform_incomingPort('toFrontEnd', elm$json$Json$Decode$value);
 var author$project$Main$subscriptions = function (model) {
-	return elm$core$Platform$Sub$none;
+	return author$project$Main$toFrontEnd(author$project$Main$decodeValue);
 };
 var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$toBackEnd = _Platform_outgoingPort('toBackEnd', elm$json$Json$Encode$string);
 var author$project$Main$update = F2(
 	function (msg, model) {
-		return _Utils_Tuple2(
-			model,
-			author$project$Main$toBackEnd('openFolder'));
+		if (msg.$ === 'ChooseFolder') {
+			return _Utils_Tuple2(
+				model,
+				author$project$Main$toBackEnd('openFolder'));
+		} else {
+			var data = msg.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{movies: data}),
+				elm$core$Platform$Cmd$none);
+		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
-var elm$json$Json$Decode$map = _Json_map1;
-var elm$json$Json$Decode$map2 = _Json_map2;
-var elm$json$Json$Decode$succeed = _Json_succeed;
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 'Normal':
-			return 0;
-		case 'MayStopPropagation':
-			return 1;
-		case 'MayPreventDefault':
-			return 2;
-		default:
-			return 3;
-	}
-};
-var elm$html$Html$button = _VirtualDom_node('button');
-var elm$html$Html$div = _VirtualDom_node('div');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
-var author$project$Main$view = function (model) {
-	return A2(
-		elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$button,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onClick(author$project$Main$ChooseFolder)
-					]),
-				_List_fromArray(
-					[
-						elm$html$Html$text('Choose Folder')
-					]))
-			]));
-};
-var elm$browser$Browser$External = function (a) {
-	return {$: 'External', a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 'Internal', a: a};
-};
-var elm$browser$Browser$Dom$NotFound = function (a) {
-	return {$: 'NotFound', a: a};
-};
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0.a;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
-	}
-};
-var elm$core$Task$Perform = function (a) {
-	return {$: 'Perform', a: a};
-};
-var elm$core$Task$succeed = _Scheduler_succeed;
-var elm$core$Task$init = elm$core$Task$succeed(_Utils_Tuple0);
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -4958,6 +4910,102 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
+var elm$json$Json$Decode$map2 = _Json_map2;
+var elm$json$Json$Decode$succeed = _Json_succeed;
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 'Normal':
+			return 0;
+		case 'MayStopPropagation':
+			return 1;
+		case 'MayPreventDefault':
+			return 2;
+		default:
+			return 3;
+	}
+};
+var elm$html$Html$button = _VirtualDom_node('button');
+var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$li = _VirtualDom_node('li');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$html$Html$ul = _VirtualDom_node('ul');
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Main$view = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(author$project$Main$ChooseFolder)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Choose Folder')
+					])),
+				A2(
+				elm$html$Html$ul,
+				_List_Nil,
+				A2(
+					elm$core$List$map,
+					function (l) {
+						return A2(
+							elm$html$Html$li,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text(l.file)
+								]));
+					},
+					model.movies))
+			]));
+};
+var elm$browser$Browser$External = function (a) {
+	return {$: 'External', a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 'Internal', a: a};
+};
+var elm$browser$Browser$Dom$NotFound = function (a) {
+	return {$: 'NotFound', a: a};
+};
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0.a;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$Perform = function (a) {
+	return {$: 'Perform', a: a};
+};
+var elm$core$Task$succeed = _Scheduler_succeed;
+var elm$core$Task$init = elm$core$Task$succeed(_Utils_Tuple0);
 var elm$core$Task$andThen = _Scheduler_andThen;
 var elm$core$Task$map = F2(
 	function (func, taskA) {
