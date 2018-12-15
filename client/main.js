@@ -4829,20 +4829,26 @@ var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$toBackEnd = _Platform_outgoingPort('toBackEnd', elm$json$Json$Encode$string);
 var author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'ChooseFolder') {
-			return _Utils_Tuple2(
-				model,
-				author$project$Main$toBackEnd('openFolder'));
-		} else {
-			var data = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
+		switch (msg.$) {
+			case 'ChooseFolder':
+				return _Utils_Tuple2(
 					model,
-					{movies: data}),
-				elm$core$Platform$Cmd$none);
+					author$project$Main$toBackEnd('openFolder'));
+			case 'Search':
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$toBackEnd('search'));
+			default:
+				var data = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{movies: data}),
+					elm$core$Platform$Cmd$none);
 		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};
+var author$project$Main$Search = {$: 'Search'};
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -4967,6 +4973,16 @@ var author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						elm$html$Html$text('Choose Folder')
+					])),
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(author$project$Main$Search)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('search')
 					])),
 				A2(
 				elm$html$Html$ul,

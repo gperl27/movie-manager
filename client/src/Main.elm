@@ -44,6 +44,7 @@ init _ =
 
 type Msg
     = ChooseFolder
+    | Search
     | JSONData (List Movie)
 
 
@@ -52,6 +53,8 @@ update msg model =
     case msg of
         ChooseFolder ->
             ( model, toBackEnd "openFolder" )
+        Search ->
+            ( model, toBackEnd "search" )
         JSONData data ->
             ({ model | movies = data }, Cmd.none )        
 
@@ -82,6 +85,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ button [ onClick ChooseFolder ] [ text "Choose Folder" ],
+          button [ onClick Search ] [ text "search" ],
           ul [] (List.map (\l -> li [] [ text l.filename ]) model.movies)
         ]
 
