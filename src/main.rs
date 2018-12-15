@@ -7,9 +7,12 @@ extern crate serde_json;
 extern crate web_view;
 
 use glob::glob;
+use std::path::PathBuf;
 use web_view::*;
 
 fn main() {
+    // let data = Box::new(Vec::new());
+
     let webview = web_view::builder()
         .title("Movie Manager")
         .content(Content::Html(create_html()))
@@ -31,10 +34,11 @@ fn main() {
                         movies.clear();
 
                         let mut path = path.into_os_string().into_string().unwrap();
-                        &path.push_str("/*.*");
+                        &path.push_str("/*.mp4");
 
                         for entry in glob(&path).unwrap() {
-                            movies.push(entry.unwrap());
+                            let movie = Movie::new(entry.unwrap());
+                            movies.push(movie);
                         }
                     }
                     None => println!("Cancelled opening folder"),
@@ -46,15 +50,7 @@ fn main() {
 
             let render_movies = {
                 let movies = webview.user_data();
-
-                let mut movie_vec = vec![];
-
-                for movie in movies {
-                    let movie = Movie { file: movie };
-                    movie_vec.push(movie)
-                }
-
-                let movies = serde_json::to_string(&movie_vec).unwrap();
+                let movies = serde_json::to_string(&movies).unwrap();
 
                 format!("toFrontEnd({})", movies)
             };
@@ -70,8 +66,18 @@ fn main() {
 }
 
 #[derive(Serialize, Debug)]
-struct Movie<'a> {
-    file: &'a std::path::PathBuf,
+struct Movie {
+    filepath: String,
+    filename: String,
+}
+
+impl Movie {
+    fn new(entry: PathBuf) -> Movie {
+        let filepath = String::from(entry.to_str().unwrap());
+        let filename = String::from(entry.file_name().unwrap().to_str().unwrap());
+
+        Movie { filepath, filename }
+    }
 }
 
 fn create_html() -> String {
@@ -93,7 +99,8 @@ fn create_html() -> String {
     </body>
     </html>
     "#,
-        elmJs = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.js"),
+        // elmJs = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.js"),
+        elmJs = include_str!("/home/greg/Documents/code/rust/movie_maker/client/main.js"),
         portsJs = PORTS_JS
     )
 }

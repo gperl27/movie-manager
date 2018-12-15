@@ -22,7 +22,7 @@ main =
 
 
 type alias Movie =
-    { file : String }
+    { filename : String, filepath : String }
 
 
 type alias Model =
@@ -82,13 +82,15 @@ view : Model -> Html Msg
 view model =
     div []
         [ button [ onClick ChooseFolder ] [ text "Choose Folder" ],
-          ul [] (List.map (\l -> li [] [ text l.file ]) model.movies)
+          ul [] (List.map (\l -> li [] [ text l.filename ]) model.movies)
         ]
 
 movieDecoder : Decoder Movie
 movieDecoder =
-    JD.map Movie
-        (field "file" string)
+    JD.map2 Movie
+        (field "filename" string)
+        (field "filepath" string)
+
 
 movieListDecoder : Decoder (List Movie)
 movieListDecoder =
