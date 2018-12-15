@@ -4,8 +4,11 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Json.Decode as JD exposing (field, Decoder, int, string)
+import Json.Decode as JD exposing (Decoder, field, int, string)
 import Json.Encode as JE exposing (Value)
+
+
+
 -- Main
 
 
@@ -27,15 +30,14 @@ type alias Movie =
 
 
 type alias Model =
-    { movies: List Movie, search: String } 
+    { movies : List Movie, search : String }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( {
-        movies = [],
-        search = ""
-    } 
+    ( { movies = []
+      , search = ""
+      }
     , Cmd.none
     )
 
@@ -50,67 +52,85 @@ type Msg
     | Play Movie
     | JSONData (List Movie)
 
-sendOpenFolder: Cmd Msg
+
+sendOpenFolder : Cmd Msg
 sendOpenFolder =
     let
-        json = JE.object [("_type", JE.string "OpenFolder")]
-        str = JE.encode 0 json
-    in
-        toBackEnd str
+        json =
+            JE.object [ ( "_type", JE.string "OpenFolder" ) ]
 
-sendSearch: String -> Cmd Msg
+        str =
+            JE.encode 0 json
+    in
+    toBackEnd str
+
+
+sendSearch : String -> Cmd Msg
 sendSearch keyword =
     let
-        json = JE.object [("_type", JE.string "Search"),
-                          ("keyword", JE.string keyword)
-                         ]
-                                                       
-        str = JE.encode 0 json
+        json =
+            JE.object
+                [ ( "_type", JE.string "Search" )
+                , ( "keyword", JE.string keyword )
+                ]
+
+        str =
+            JE.encode 0 json
     in
-        toBackEnd str
-    
-sendPlayMovie: Movie -> Cmd Msg
+    toBackEnd str
+
+
+sendPlayMovie : Movie -> Cmd Msg
 sendPlayMovie movie =
     let
-        json = JE.object [("_type", JE.string "Play"),
-                          ("movie", JE.object [ 
-                              ("filename", JE.string movie.filename),
-                              ("filepath", JE.string movie.filepath)
-                          ])
+        json =
+            JE.object
+                [ ( "_type", JE.string "Play" )
+                , ( "movie"
+                  , JE.object
+                        [ ( "filename", JE.string movie.filename )
+                        , ( "filepath", JE.string movie.filepath )
+                        ]
+                  )
+                ]
 
-                         ]
-                                                       
-        str = JE.encode 0 json
+        str =
+            JE.encode 0 json
     in
-        toBackEnd str
+    toBackEnd str
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChooseFolder ->
             ( model, sendOpenFolder )
-        Search str->
-            ({ model | search = str}, sendSearch str )
+
+        Search str ->
+            ( { model | search = str }, sendSearch str )
+
         Play movie ->
             ( model, sendPlayMovie movie )
+
         JSONData data ->
-            ({ model | movies = data }, Cmd.none )        
+            ( { model | movies = data }, Cmd.none )
 
 
 
 -- Subscriptions
 
 
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    toFrontEnd (decodeValue) 
-    
+    toFrontEnd decodeValue
+
+
 decodeValue : JE.Value -> Msg
 decodeValue raw =
     case JD.decodeValue movieListDecoder raw of
         Ok movies ->
             JSONData movies
+
         Err error ->
             JSONData []
 
@@ -122,10 +142,11 @@ decodeValue raw =
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick ChooseFolder ] [ text "Choose Folder" ],
-          input [ placeholder "Text to reverse", value model.search, onInput Search ] [],
-          ul [] (List.map (\l -> li [] [ text l.filename, button [ onClick ( Play l )] [ text "Play" ]]) model.movies)
+        [ button [ onClick ChooseFolder ] [ text "Choose Folder" ]
+        , input [ placeholder "Text to reverse", value model.search, onInput Search ] []
+        , ul [] (List.map (\l -> li [] [ text l.filename, button [ onClick (Play l) ] [ text "Play" ] ]) model.movies)
         ]
+
 
 movieDecoder : Decoder Movie
 movieDecoder =
@@ -140,4 +161,6 @@ movieListDecoder =
 
 
 port toBackEnd : String -> Cmd msg
+
+
 port toFrontEnd : (JE.Value -> msg) -> Sub msg
