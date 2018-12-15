@@ -5009,8 +5009,10 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 };
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$i = _VirtualDom_node('i');
 var elm$html$Html$input = _VirtualDom_node('input');
 var elm$html$Html$li = _VirtualDom_node('li');
+var elm$html$Html$span = _VirtualDom_node('span');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$ul = _VirtualDom_node('ul');
@@ -5021,6 +5023,7 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			elm$json$Json$Encode$string(string));
 	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5074,13 +5077,17 @@ var elm$html$Html$Events$onInput = function (tagger) {
 var author$project$Main$view = function (model) {
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('container')
+			]),
 		_List_fromArray(
 			[
 				A2(
 				elm$html$Html$button,
 				_List_fromArray(
 					[
+						elm$html$Html$Attributes$class('button'),
 						elm$html$Html$Events$onClick(author$project$Main$ChooseFolder)
 					]),
 				_List_fromArray(
@@ -5091,37 +5098,67 @@ var author$project$Main$view = function (model) {
 				elm$html$Html$input,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$placeholder('Text to reverse'),
+						elm$html$Html$Attributes$class('input'),
+						elm$html$Html$Attributes$class('is-primary'),
+						elm$html$Html$Attributes$placeholder('Search'),
 						elm$html$Html$Attributes$value(model.search),
 						elm$html$Html$Events$onInput(author$project$Main$Search)
 					]),
 				_List_Nil),
 				A2(
-				elm$html$Html$ul,
-				_List_Nil,
-				A2(
-					elm$core$List$map,
-					function (l) {
-						return A2(
-							elm$html$Html$li,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(l.filename),
-									A2(
-									elm$html$Html$button,
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('content')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$ul,
+						_List_Nil,
+						A2(
+							elm$core$List$map,
+							function (l) {
+								return A2(
+									elm$html$Html$li,
+									_List_Nil,
 									_List_fromArray(
 										[
-											elm$html$Html$Events$onClick(
-											author$project$Main$Play(l))
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text('Play')
-										]))
-								]));
-					},
-					model.movies))
+											elm$html$Html$text(l.filename),
+											A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button'),
+													elm$html$Html$Attributes$class('is-primary'),
+													elm$html$Html$Events$onClick(
+													author$project$Main$Play(l))
+												]),
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$span,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$class('icon')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															elm$html$Html$i,
+															_List_fromArray(
+																[
+																	elm$html$Html$Attributes$class('fas'),
+																	elm$html$Html$Attributes$class('fa-play')
+																]),
+															_List_Nil)
+														])),
+													elm$html$Html$text('Play')
+												]))
+										]));
+							},
+							model.movies))
+					]))
 			]));
 };
 var elm$browser$Browser$External = function (a) {

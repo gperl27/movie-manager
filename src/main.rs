@@ -145,12 +145,14 @@ fn create_html() -> String {
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
+        <style>{bulma}</style>
     </head>
     <body>
         <div id="view"></div>
         <script>
             {elmJs}
             {portsJs}
+            {fontAwesome}
         </script> 
         
     </body>
@@ -158,18 +160,20 @@ fn create_html() -> String {
     "#,
         // elmJs = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.js"),
         elmJs = include_str!("/home/greg/Documents/code/rust/movie_maker/client/main.js"),
-        portsJs = PORTS_JS
+        portsJs = PORTS_JS,
+        bulma = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/css/bulma-0.7.2/css/bulma.min.css"),
+        fontAwesome = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
     )
 }
 
 const PORTS_JS: &'static str = r#"
-        var app = Elm.Main.init({node: document.getElementById("view")});
+    var app = Elm.Main.init({node: document.getElementById("view")});
 
-        app.ports.toBackEnd.subscribe(function (str) {
-            window.external.invoke(str);
-        });
+    app.ports.toBackEnd.subscribe(function (str) {
+        window.external.invoke(str);
+    });
 
-        function toFrontEnd(str) {
-          app.ports.toFrontEnd.send(str);
-        }
+    function toFrontEnd(str) {
+      app.ports.toFrontEnd.send(str);
+    }
 "#;

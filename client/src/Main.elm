@@ -141,10 +141,12 @@ decodeValue raw =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ button [ onClick ChooseFolder ] [ text "Choose Folder" ]
-        , input [ placeholder "Text to reverse", value model.search, onInput Search ] []
-        , ul [] (List.map (\l -> li [] [ text l.filename, button [ onClick (Play l) ] [ text "Play" ] ]) model.movies)
+    div [ class "container" ]
+        [ button [ class "button", onClick ChooseFolder ] [ text "Choose Folder" ]
+        , input [ class "input", class "is-primary", placeholder "Search", value model.search, onInput Search ] []
+        , div [ class "content" ]
+            [ ul [] (List.map (\l -> li [] [ text l.filename, button [ class "button", class "is-primary", onClick (Play l) ] [ span [ class "icon" ] [ i [ class "fas", class "fa-play" ] [] ], text "Play" ] ]) model.movies)
+            ]
         ]
 
 
@@ -158,6 +160,10 @@ movieDecoder =
 movieListDecoder : Decoder (List Movie)
 movieListDecoder =
     JD.list movieDecoder
+
+
+
+-- PORTS
 
 
 port toBackEnd : String -> Cmd msg

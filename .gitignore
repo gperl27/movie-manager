@@ -1,3 +1,4 @@
 /target
 **/*.rs.bk
 /client/elm-stuff
+/client/vendor
