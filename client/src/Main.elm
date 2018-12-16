@@ -135,17 +135,36 @@ decodeValue raw =
             JSONData []
 
 
-
--- VIEW
-
-
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
-        [ button [ class "button", onClick ChooseFolder ] [ text "Choose Folder" ]
-        , input [ class "input", class "is-primary", placeholder "Search", value model.search, onInput Search ] []
-        , div [ class "content" ]
-            [ ul [] (List.map (\l -> li [] [ text l.filename, button [ class "button", class "is-primary", onClick (Play l) ] [ span [ class "icon" ] [ i [ class "fas", class "fa-play" ] [] ], text "Play" ] ]) model.movies)
+    section [ class "section" ]
+        [ div [ class "container" ]
+            [ div [ class "columns" ]
+                [ div [ class "column", class "is-one-quarter", class "has-text-centered" ] [ button [ class "button", onClick ChooseFolder ] [ text "Choose Folder" ] ]
+                , div [ class "column" ]
+                    [ input [ class "input", class "is-primary", placeholder "Search", value model.search, onInput Search ] []
+                    , div [ class "content" ]
+                        [ ul [ class "unstyled" ]
+                            (List.map
+                                (\l ->
+                                    li []
+                                        [ div [ class "columns", class "is-vcentered" ]
+                                            [ div [ class "column", class "is-one-quarter" ]
+                                                [ button [ class "button", class "is-primary", onClick (Play l) ]
+                                                    [ span [ class "icon" ]
+                                                        [ i [ class "fas", class "fa-play" ] [] ]
+                                                    , span [] [ text "Play" ]
+                                                    ]
+                                                ]
+                                            , div [] [ span [] [ text l.filename ] ]
+                                            ]
+                                        ]
+                                )
+                                model.movies
+                            )
+                        ]
+                    ]
+                ]
             ]
         ]
 

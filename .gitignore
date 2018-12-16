@@ -2,3 +2,4 @@
 **/*.rs.bk
 /client/elm-stuff
 /client/vendor
+.DS_Store

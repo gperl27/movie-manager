@@ -35,23 +35,17 @@ impl State {
     }
 
     fn search_files(&self, search: &str) -> Vec<&Movie> {
-        let t = self.get_files();
-
+        let files = self.get_files();
+        let search = &search.to_lowercase();
         let mut found_files = vec![];
 
-        for f in t.into_iter() {
-            if f.filename.contains(search) {
-                found_files.push(f);
+        for file in files.into_iter() {
+            if file.filename.to_lowercase().contains(search) {
+                found_files.push(file);
             }
         }
 
         found_files
-        // .cloned()
-        // .filter(|x| x.filename.contains(search))
-        // .collect()
-
-        // b.files.iter().filter(|x| true)
-        // &self.files
     }
 }
 
@@ -146,6 +140,7 @@ fn create_html() -> String {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
         <style>{bulma}</style>
+        <style>{customCss}</style>
     </head>
     <body>
         <div id="view"></div>
@@ -158,11 +153,14 @@ fn create_html() -> String {
     </body>
     </html>
     "#,
-        // elmJs = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.js"),
-        elmJs = include_str!("/home/greg/Documents/code/rust/movie_maker/client/main.js"),
+        elmJs = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.js"),
+        // elmJs = include_str!("/home/greg/Documents/code/rust/movie_maker/client/main.js"),
         portsJs = PORTS_JS,
-        bulma = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/css/bulma-0.7.2/css/bulma.min.css"),
-        fontAwesome = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
+        // bulma = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/css/bulma-0.7.2/css/bulma.min.css"),
+        bulma = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/vendor/bulma-0.7.2/css/bulma.min.css"),
+        // fontAwesome = include_str!("/home/greg/Documents/code/rust/movie_maker/client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
+        fontAwesome = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
+        customCss = include_str!("/Users/gperlman/Documents/side/rust/projects/mm/client/main.css")
     )
 }
 
