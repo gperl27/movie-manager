@@ -4822,20 +4822,21 @@ var author$project$Main$init = function (_n0) {
 var author$project$Main$JSONData = function (a) {
 	return {$: 'JSONData', a: a};
 };
-var author$project$Main$Movie = F3(
-	function (filename, filepath, exists) {
-		return {exists: exists, filename: filename, filepath: filepath};
+var author$project$Main$Movie = F4(
+	function (filename, filepath, exists, folder) {
+		return {exists: exists, filename: filename, filepath: filepath, folder: folder};
 	});
 var elm$json$Json$Decode$bool = _Json_decodeBool;
 var elm$json$Json$Decode$field = _Json_decodeField;
-var elm$json$Json$Decode$map3 = _Json_map3;
+var elm$json$Json$Decode$map4 = _Json_map4;
 var elm$json$Json$Decode$string = _Json_decodeString;
-var author$project$Main$movieDecoder = A4(
-	elm$json$Json$Decode$map3,
+var author$project$Main$movieDecoder = A5(
+	elm$json$Json$Decode$map4,
 	author$project$Main$Movie,
 	A2(elm$json$Json$Decode$field, 'filename', elm$json$Json$Decode$string),
 	A2(elm$json$Json$Decode$field, 'filepath', elm$json$Json$Decode$string),
-	A2(elm$json$Json$Decode$field, 'exists', elm$json$Json$Decode$bool));
+	A2(elm$json$Json$Decode$field, 'exists', elm$json$Json$Decode$bool),
+	A2(elm$json$Json$Decode$field, 'folder', elm$json$Json$Decode$string));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$movieListDecoder = elm$json$Json$Decode$list(author$project$Main$movieDecoder);
 var elm$json$Json$Decode$decodeValue = _Json_run;
@@ -4886,7 +4887,10 @@ var author$project$Main$sendPlayMovie = function (movie) {
 							elm$json$Json$Encode$string(movie.filepath)),
 							_Utils_Tuple2(
 							'exists',
-							elm$json$Json$Encode$bool(movie.exists))
+							elm$json$Json$Encode$bool(movie.exists)),
+							_Utils_Tuple2(
+							'folder',
+							elm$json$Json$Encode$string(movie.folder))
 						])))
 			]));
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
@@ -5246,6 +5250,14 @@ var author$project$Main$view = function (model) {
 																					_List_fromArray(
 																						[
 																							elm$html$Html$text(l.filename)
+																						])),
+																					elm$html$Html$text(' - '),
+																					A2(
+																					elm$html$Html$span,
+																					_List_Nil,
+																					_List_fromArray(
+																						[
+																							elm$html$Html$text(l.folder)
 																						]))
 																				]))
 																		]))

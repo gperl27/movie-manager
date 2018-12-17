@@ -26,7 +26,7 @@ main =
 
 
 type alias Movie =
-    { filename : String, filepath : String, exists : Bool }
+    { filename : String, filepath : String, exists : Bool, folder : String }
 
 
 type alias Model =
@@ -91,6 +91,7 @@ sendPlayMovie movie =
                         [ ( "filename", JE.string movie.filename )
                         , ( "filepath", JE.string movie.filepath )
                         , ( "exists", JE.bool movie.exists )
+                        , ( "folder", JE.string movie.folder )
                         ]
                   )
                 ]
@@ -157,7 +158,7 @@ view model =
                                                     , span [] [ text "Play" ]
                                                     ]
                                                 ]
-                                            , div [] [ span [] [ text l.filename ] ]
+                                            , div [] [ span [] [ text l.filename ], text " - ", span [] [ text l.folder ] ]
                                             ]
                                         ]
                                 )
@@ -172,10 +173,11 @@ view model =
 
 movieDecoder : Decoder Movie
 movieDecoder =
-    JD.map3 Movie
+    JD.map4 Movie
         (field "filename" string)
         (field "filepath" string)
         (field "exists" bool)
+        (field "folder" string)
 
 
 movieListDecoder : Decoder (List Movie)

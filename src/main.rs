@@ -13,6 +13,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::path::PathBuf;
+use std::ffi::OsStr;
 use web_view::*;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -134,11 +135,15 @@ fn main() {
                     .choose_directory("Please choose a folder...", "")?
                 {
                     Some(path) => {
+                        let cloned_path = path.clone(); 
+                        let folder = String::from(cloned_path.file_name().unwrap().to_str().unwrap());
+
                         let mut path = path.into_os_string().into_string().unwrap();
+                        println!("{:?}", path);
                         &path.push_str("/*.mp4");
 
                         for entry in glob(&path).unwrap() {
-                            let movie = Movie::new(entry.unwrap());
+                            let movie = Movie::new(entry.unwrap(), &folder);
 
                             cache.insert(movie);
                         }
@@ -171,16 +176,19 @@ struct Movie {
     filepath: String,
     filename: String,
     exists: bool,
+    folder: String,
 }
 
 impl Movie {
-    fn new(entry: PathBuf) -> Movie {
+    fn new(entry: PathBuf, folder: &String) -> Movie {
         let filepath = String::from(entry.to_str().unwrap());
         let filename = String::from(entry.file_name().unwrap().to_str().unwrap());
+        let folder = folder.to_string();
 
         Movie {
             filepath,
             filename,
+            folder,
             exists: true,
         }
     }
@@ -191,24 +199,6 @@ impl Movie {
         }
     }
 }
-
-// impl Ord for Movie {
-//     fn cmp(&self, other: &Movie) -> Ordering {
-//         self.filename.cmp(&other.filename)
-//     }
-// }
-
-// impl PartialOrd for Movie {
-//     fn partial_cmp(&self, other: &Movie) -> Option<Ordering> {
-//         Some(self.cmp(other))
-//     }
-// }
-
-// impl PartialEq for Movie {
-//     fn eq(&self, other: &Movie) -> bool {
-//         self.filename == other.filename
-//     }
-// }
 
 fn send_to_ui<'a, S, T>(webview: &mut WebView<'a, T>, data: &S)
 where
