@@ -4822,18 +4822,20 @@ var author$project$Main$init = function (_n0) {
 var author$project$Main$JSONData = function (a) {
 	return {$: 'JSONData', a: a};
 };
-var author$project$Main$Movie = F2(
-	function (filename, filepath) {
-		return {filename: filename, filepath: filepath};
+var author$project$Main$Movie = F3(
+	function (filename, filepath, exists) {
+		return {exists: exists, filename: filename, filepath: filepath};
 	});
+var elm$json$Json$Decode$bool = _Json_decodeBool;
 var elm$json$Json$Decode$field = _Json_decodeField;
-var elm$json$Json$Decode$map2 = _Json_map2;
+var elm$json$Json$Decode$map3 = _Json_map3;
 var elm$json$Json$Decode$string = _Json_decodeString;
-var author$project$Main$movieDecoder = A3(
-	elm$json$Json$Decode$map2,
+var author$project$Main$movieDecoder = A4(
+	elm$json$Json$Decode$map3,
 	author$project$Main$Movie,
 	A2(elm$json$Json$Decode$field, 'filename', elm$json$Json$Decode$string),
-	A2(elm$json$Json$Decode$field, 'filepath', elm$json$Json$Decode$string));
+	A2(elm$json$Json$Decode$field, 'filepath', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'exists', elm$json$Json$Decode$bool));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$movieListDecoder = elm$json$Json$Decode$list(author$project$Main$movieDecoder);
 var elm$json$Json$Decode$decodeValue = _Json_run;
@@ -4863,6 +4865,7 @@ var author$project$Main$sendOpenFolder = function () {
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
 	return author$project$Main$toBackEnd(str);
 }();
+var elm$json$Json$Encode$bool = _Json_wrap;
 var author$project$Main$sendPlayMovie = function (movie) {
 	var json = elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -4880,7 +4883,10 @@ var author$project$Main$sendPlayMovie = function (movie) {
 							elm$json$Json$Encode$string(movie.filename)),
 							_Utils_Tuple2(
 							'filepath',
-							elm$json$Json$Encode$string(movie.filepath))
+							elm$json$Json$Encode$string(movie.filepath)),
+							_Utils_Tuple2(
+							'exists',
+							elm$json$Json$Encode$bool(movie.exists))
 						])))
 			]));
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
@@ -4921,6 +4927,7 @@ var author$project$Main$Play = function (a) {
 var author$project$Main$Search = function (a) {
 	return {$: 'Search', a: a};
 };
+var elm$core$Basics$not = _Basics_not;
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -4994,6 +5001,7 @@ var elm$core$Basics$identity = function (x) {
 	return x;
 };
 var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$succeed = _Json_succeed;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
@@ -5025,6 +5033,14 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$bool(bool));
+	});
+var elm$html$Html$Attributes$disabled = elm$html$Html$Attributes$boolProperty('disabled');
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5188,7 +5204,8 @@ var author$project$Main$view = function (model) {
 																							elm$html$Html$Attributes$class('button'),
 																							elm$html$Html$Attributes$class('is-primary'),
 																							elm$html$Html$Events$onClick(
-																							author$project$Main$Play(l))
+																							author$project$Main$Play(l)),
+																							elm$html$Html$Attributes$disabled(!l.exists)
 																						]),
 																					_List_fromArray(
 																						[

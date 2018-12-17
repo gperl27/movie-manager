@@ -4,7 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Json.Decode as JD exposing (Decoder, field, int, string)
+import Json.Decode as JD exposing (Decoder, bool, field, int, string)
 import Json.Encode as JE exposing (Value)
 
 
@@ -26,7 +26,7 @@ main =
 
 
 type alias Movie =
-    { filename : String, filepath : String }
+    { filename : String, filepath : String, exists : Bool }
 
 
 type alias Model =
@@ -90,6 +90,7 @@ sendPlayMovie movie =
                   , JE.object
                         [ ( "filename", JE.string movie.filename )
                         , ( "filepath", JE.string movie.filepath )
+                        , ( "exists", JE.bool movie.exists )
                         ]
                   )
                 ]
@@ -150,7 +151,7 @@ view model =
                                     li []
                                         [ div [ class "columns", class "is-vcentered" ]
                                             [ div [ class "column", class "is-one-quarter" ]
-                                                [ button [ class "button", class "is-primary", onClick (Play l) ]
+                                                [ button [ class "button", class "is-primary", onClick (Play l), disabled (not l.exists) ]
                                                     [ span [ class "icon" ]
                                                         [ i [ class "fas", class "fa-play" ] [] ]
                                                     , span [] [ text "Play" ]
@@ -171,9 +172,10 @@ view model =
 
 movieDecoder : Decoder Movie
 movieDecoder =
-    JD.map2 Movie
+    JD.map3 Movie
         (field "filename" string)
         (field "filepath" string)
+        (field "exists" bool)
 
 
 movieListDecoder : Decoder (List Movie)
