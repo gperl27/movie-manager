@@ -3,3 +3,4 @@
 /client/elm-stuff
 /client/vendor
 .DS_Store
+.cache

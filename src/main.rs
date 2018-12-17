@@ -8,12 +8,12 @@ extern crate serde_json;
 extern crate web_view;
 
 use glob::glob;
+use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 use std::path::PathBuf;
 use web_view::*;
-
-struct State {
-    files: Box<Vec<Movie>>,
-}
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(tag = "_type")]
@@ -23,18 +23,82 @@ enum Action {
     Play { movie: Movie },
 }
 
-impl State {
-    fn new() -> State {
-        State {
-            files: Box::new(vec![]),
+struct Cache<T> {
+    data: Box<Vec<T>>,
+}
+
+impl<T> Cache<T> {
+    fn new() -> Cache<T> {
+        Cache {
+            data: Box::new(vec![]),
         }
     }
 
-    fn get_files(&self) -> &Vec<Movie> {
-        &self.files
+    fn get_data_from_storage(&self) -> String {
+        let mut file = File::open(".cache").expect("file not found");
+
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)
+            .expect("something went wrong reading the file");
+
+        println!("cache contains: {:?}", contents);
+
+        contents
     }
 
-    fn search_files(&self, search: &str) -> Vec<&Movie> {
+    fn set_data(&mut self, data: Box<Vec<T>>) {
+        self.data = data;
+    }
+
+    fn write(&self, data: String) {
+        fs::write(".cache", data).expect("could not write to cache");
+    }
+}
+
+impl Cache<Movie> {
+    fn initialize(&mut self) {
+        let data = self.get_data_from_storage();
+
+        let movies: Box<Vec<Movie>> = match serde_json::from_str(&data) {
+            Ok(data) => data,
+            Err(_) => Box::new(vec![]),
+        };
+
+        self.set_data(movies);
+    }
+
+    fn serialize(&self) -> String {
+        serde_json::to_string(&self.data).unwrap()
+    }
+
+    fn get_files(&mut self) -> &Vec<Movie> {
+        for file in self.data.iter_mut() {
+            let path = Path::new(&file.filepath);
+            if !path.exists() {
+                file.exists = false
+            }
+        }
+
+        &self.data
+    }
+
+    fn insert(&mut self, movie: Movie) {
+        // remove occurence of same filename
+        // ie. file.mp4 gets moved from USB A to USB B
+        let index = self
+            .data
+            .iter()
+            .position(|x| &x.filename == &movie.filename);
+
+        if index.is_some() {
+            self.data.remove(index.unwrap());
+        }
+
+        self.data.push(movie);
+    }
+
+    // make trait for iteratable for Movie
+    fn search_files(&mut self, search: &str) -> Vec<&Movie> {
         let files = self.get_files();
         let search = &search.to_lowercase();
         let mut found_files = vec![];
@@ -50,7 +114,10 @@ impl State {
 }
 
 fn main() {
-    let mut state = State::new();
+    let mut cache: Cache<Movie> = Cache::new();
+    cache.initialize();
+
+    println!("data: {:?}", cache.data);
 
     let webview = web_view::builder()
         .title("Movie Manager")
@@ -66,22 +133,24 @@ fn main() {
                     .choose_directory("Please choose a folder...", "")?
                 {
                     Some(path) => {
-                        let state = &mut state;
-                        state.files.clear();
-
                         let mut path = path.into_os_string().into_string().unwrap();
                         &path.push_str("/*.mp4");
 
                         for entry in glob(&path).unwrap() {
                             let movie = Movie::new(entry.unwrap());
-                            state.files.push(movie);
+
+                            cache.insert(movie);
                         }
-                        send_to_ui(webview, state.get_files());
+
+                        // update cache with files found from current folder
+                        cache.write(cache.serialize());
+
+                        send_to_ui(webview, &cache.get_files());
                     }
                     None => println!("Cancelled opening folder"),
                 },
                 Ok(Action::Search { keyword }) => {
-                    send_to_ui(webview, &state.search_files(&keyword));
+                    send_to_ui(webview, &cache.search_files(&keyword));
                 }
                 Ok(Action::Play { movie }) => {
                     movie.play();
@@ -100,6 +169,7 @@ fn main() {
 struct Movie {
     filepath: String,
     filename: String,
+    exists: bool,
 }
 
 impl Movie {
@@ -107,7 +177,11 @@ impl Movie {
         let filepath = String::from(entry.to_str().unwrap());
         let filename = String::from(entry.file_name().unwrap().to_str().unwrap());
 
-        Movie { filepath, filename }
+        Movie {
+            filepath,
+            filename,
+            exists: true,
+        }
     }
 
     fn play(&self) {

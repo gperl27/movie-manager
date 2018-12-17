@@ -38,7 +38,7 @@ init _ =
     ( { movies = []
       , search = ""
       }
-    , Cmd.none
+    , sendSearch ""
     )
 
 

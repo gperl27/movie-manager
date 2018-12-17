@@ -4310,15 +4310,11 @@ function _Browser_load(url)
 		}
 	}));
 }
-var elm$core$Basics$False = {$: 'False'};
-var elm$core$Basics$True = {$: 'True'};
-var elm$core$Result$isOk = function (result) {
-	if (result.$ === 'Ok') {
-		return true;
-	} else {
-		return false;
-	}
-};
+var elm$core$Array$branchFactor = 32;
+var elm$core$Array$Array_elm_builtin = F4(
+	function (a, b, c, d) {
+		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
+	});
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$GT = {$: 'GT'};
 var elm$core$Basics$LT = {$: 'LT'};
@@ -4399,11 +4395,6 @@ var elm$core$Array$foldr = F3(
 var elm$core$Array$toList = function (array) {
 	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
 };
-var elm$core$Array$branchFactor = 32;
-var elm$core$Array$Array_elm_builtin = F4(
-	function (a, b, c, d) {
-		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
-	});
 var elm$core$Basics$ceiling = _Basics_ceiling;
 var elm$core$Basics$fdiv = _Basics_fdiv;
 var elm$core$Basics$logBase = F2(
@@ -4528,6 +4519,7 @@ var elm$core$Array$builderToArray = F2(
 				builder.tail);
 		}
 	});
+var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -4579,6 +4571,14 @@ var elm$core$Result$Err = function (a) {
 };
 var elm$core$Result$Ok = function (a) {
 	return {$: 'Ok', a: a};
+};
+var elm$core$Basics$True = {$: 'True'};
+var elm$core$Result$isOk = function (result) {
+	if (result.$ === 'Ok') {
+		return true;
+	} else {
+		return false;
+	}
 };
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
@@ -4785,12 +4785,39 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$toBackEnd = _Platform_outgoingPort('toBackEnd', elm$json$Json$Encode$string);
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var author$project$Main$sendSearch = function (keyword) {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('Search')),
+				_Utils_Tuple2(
+				'keyword',
+				elm$json$Json$Encode$string(keyword))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
+};
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
 		{movies: _List_Nil, search: ''},
-		elm$core$Platform$Cmd$none);
+		author$project$Main$sendSearch(''));
 };
 var author$project$Main$JSONData = function (a) {
 	return {$: 'JSONData', a: a};
@@ -4824,21 +4851,6 @@ var elm$json$Json$Decode$value = _Json_decodeValue;
 var author$project$Main$toFrontEnd = _Platform_incomingPort('toFrontEnd', elm$json$Json$Decode$value);
 var author$project$Main$subscriptions = function (model) {
 	return author$project$Main$toFrontEnd(author$project$Main$decodeValue);
-};
-var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Main$toBackEnd = _Platform_outgoingPort('toBackEnd', elm$json$Json$Encode$string);
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
 };
 var author$project$Main$sendOpenFolder = function () {
 	var json = elm$json$Json$Encode$object(
@@ -4874,20 +4886,8 @@ var author$project$Main$sendPlayMovie = function (movie) {
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
 	return author$project$Main$toBackEnd(str);
 };
-var author$project$Main$sendSearch = function (keyword) {
-	var json = elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'_type',
-				elm$json$Json$Encode$string('Search')),
-				_Utils_Tuple2(
-				'keyword',
-				elm$json$Json$Encode$string(keyword))
-			]));
-	var str = A2(elm$json$Json$Encode$encode, 0, json);
-	return author$project$Main$toBackEnd(str);
-};
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
