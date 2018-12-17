@@ -79,6 +79,7 @@ impl Cache<Movie> {
             }
         }
 
+        &self.data.sort_by(|a, b| a.filename.cmp(&b.filename));
         &self.data
     }
 
@@ -165,7 +166,7 @@ fn main() {
     webview.run().unwrap();
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct Movie {
     filepath: String,
     filename: String,
@@ -190,6 +191,24 @@ impl Movie {
         }
     }
 }
+
+// impl Ord for Movie {
+//     fn cmp(&self, other: &Movie) -> Ordering {
+//         self.filename.cmp(&other.filename)
+//     }
+// }
+
+// impl PartialOrd for Movie {
+//     fn partial_cmp(&self, other: &Movie) -> Option<Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
+
+// impl PartialEq for Movie {
+//     fn eq(&self, other: &Movie) -> bool {
+//         self.filename == other.filename
+//     }
+// }
 
 fn send_to_ui<'a, S, T>(webview: &mut WebView<'a, T>, data: &S)
 where
