@@ -4819,14 +4819,15 @@ var author$project$Main$init = function (_n0) {
 		{chosenFolders: _List_Nil, folders: _List_Nil, movies: _List_Nil, search: ''},
 		author$project$Main$sendSearch(''));
 };
-var author$project$Main$JSONData = function (a) {
-	return {$: 'JSONData', a: a};
-};
+var author$project$Main$Error = {$: 'Error'};
 var author$project$Main$UpdateChosenFolders = function (a) {
 	return {$: 'UpdateChosenFolders', a: a};
 };
 var author$project$Main$UpdateFolders = function (a) {
 	return {$: 'UpdateFolders', a: a};
+};
+var author$project$Main$UpdateMovies = function (a) {
+	return {$: 'UpdateMovies', a: a};
 };
 var author$project$Main$Movie = F4(
 	function (filename, filepath, exists, folder) {
@@ -4853,10 +4854,10 @@ var author$project$Main$movieListToMsg = function (raw) {
 		raw);
 	if (_n0.$ === 'Ok') {
 		var movies = _n0.a;
-		return author$project$Main$JSONData(movies);
+		return author$project$Main$UpdateMovies(movies);
 	} else {
 		var error = _n0.a;
-		return author$project$Main$JSONData(_List_Nil);
+		return author$project$Main$Error;
 	}
 };
 var author$project$Main$decodeValue = function (raw) {
@@ -4883,7 +4884,7 @@ var author$project$Main$decodeValue = function (raw) {
 					return author$project$Main$UpdateFolders(folders);
 				} else {
 					var error = _n1.a;
-					return author$project$Main$UpdateFolders(_List_Nil);
+					return author$project$Main$Error;
 				}
 			case 'ChosenFolders':
 				var _n2 = A2(
@@ -4898,15 +4899,15 @@ var author$project$Main$decodeValue = function (raw) {
 					return author$project$Main$UpdateChosenFolders(folders);
 				} else {
 					var error = _n2.a;
-					return author$project$Main$UpdateChosenFolders(_List_Nil);
+					return author$project$Main$Error;
 				}
 			default:
 				var unknown_type = object_type.a;
-				return author$project$Main$JSONData(_List_Nil);
+				return author$project$Main$Error;
 		}
 	} else {
 		var error = object_type.a;
-		return author$project$Main$JSONData(_List_Nil);
+		return author$project$Main$Error;
 	}
 };
 var elm$json$Json$Decode$value = _Json_decodeValue;
@@ -5002,7 +5003,17 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					model,
 					author$project$Main$sendPlayMovie(movie));
-			case 'JSONData':
+			case 'ClickFolder':
+				var folder = msg.a;
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$sendClickFolder(folder));
+			case 'UnclickFolder':
+				var folder = msg.a;
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$sendUnclickFolder(folder));
+			case 'UpdateMovies':
 				var data = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -5016,23 +5027,15 @@ var author$project$Main$update = F2(
 						model,
 						{folders: folders}),
 					elm$core$Platform$Cmd$none);
-			case 'ClickFolder':
-				var folder = msg.a;
-				return _Utils_Tuple2(
-					model,
-					author$project$Main$sendClickFolder(folder));
-			case 'UnclickFolder':
-				var folder = msg.a;
-				return _Utils_Tuple2(
-					model,
-					author$project$Main$sendUnclickFolder(folder));
-			default:
+			case 'UpdateChosenFolders':
 				var folders = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{chosenFolders: folders}),
 					elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};

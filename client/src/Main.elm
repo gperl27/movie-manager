@@ -53,13 +53,14 @@ init _ =
 
 
 type Msg
-    = ChooseFolder
+    = Error
+    | ChooseFolder
     | Search String
     | Play Movie
-    | JSONData (List Movie)
-    | UpdateFolders (List String)
     | ClickFolder String
     | UnclickFolder String
+    | UpdateMovies (List Movie)
+    | UpdateFolders (List String)
     | UpdateChosenFolders (List String)
 
 
@@ -154,20 +155,23 @@ update msg model =
         Play movie ->
             ( model, sendPlayMovie movie )
 
-        JSONData data ->
-            ( { model | movies = data }, Cmd.none )
-
-        UpdateFolders folders ->
-            ( { model | folders = folders }, Cmd.none )
-
         ClickFolder folder ->
             ( model, sendClickFolder folder )
 
         UnclickFolder folder ->
             ( model, sendUnclickFolder folder )
 
+        UpdateMovies data ->
+            ( { model | movies = data }, Cmd.none )
+
+        UpdateFolders folders ->
+            ( { model | folders = folders }, Cmd.none )
+
         UpdateChosenFolders folders ->
             ( { model | chosenFolders = folders }, Cmd.none )
+
+        Error ->
+            ( model, Cmd.none )
 
 
 
@@ -179,14 +183,28 @@ subscriptions model =
     toFrontEnd decodeValue
 
 
+movieDecoder : Decoder Movie
+movieDecoder =
+    JD.map4 Movie
+        (field "filename" string)
+        (field "filepath" string)
+        (field "exists" bool)
+        (field "folder" string)
+
+
+movieListDecoder : Decoder (List Movie)
+movieListDecoder =
+    JD.list movieDecoder
+
+
 movieListToMsg : JE.Value -> Msg
 movieListToMsg raw =
     case JD.decodeValue (JD.field "movies" movieListDecoder) raw of
         Ok movies ->
-            JSONData movies
+            UpdateMovies movies
 
         Err error ->
-            JSONData []
+            Error
 
 
 decodeValue : JE.Value -> Msg
@@ -208,7 +226,7 @@ decodeValue raw =
                     UpdateFolders folders
 
                 Err error ->
-                    UpdateFolders []
+                    Error
 
         Ok "ChosenFolders" ->
             case JD.decodeValue (JD.field "chosen_folders" (JD.list string)) raw of
@@ -216,13 +234,13 @@ decodeValue raw =
                     UpdateChosenFolders folders
 
                 Err error ->
-                    UpdateChosenFolders []
+                    Error
 
         Ok unknown_type ->
-            JSONData []
+            Error
 
         Err error ->
-            JSONData []
+            Error
 
 
 
@@ -286,20 +304,6 @@ view model =
                 ]
             ]
         ]
-
-
-movieDecoder : Decoder Movie
-movieDecoder =
-    JD.map4 Movie
-        (field "filename" string)
-        (field "filepath" string)
-        (field "exists" bool)
-        (field "folder" string)
-
-
-movieListDecoder : Decoder (List Movie)
-movieListDecoder =
-    JD.list movieDecoder
 
 
 
