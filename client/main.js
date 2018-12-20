@@ -5335,6 +5335,46 @@ var author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										A2(
+										elm$html$Html$div,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('columns'),
+												elm$html$Html$Attributes$class('is-centered'),
+												elm$html$Html$Attributes$class('is-multiline')
+											]),
+										A2(
+											elm$core$List$map,
+											function (l) {
+												return A2(
+													elm$html$Html$div,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$class('column'),
+															elm$html$Html$Attributes$class('is-narrow')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															elm$html$Html$button,
+															_List_fromArray(
+																[
+																	elm$html$Html$Attributes$class('button'),
+																	elm$html$Html$Attributes$classList(
+																	_List_fromArray(
+																		[
+																			_Utils_Tuple2('is-primary', l.isChosen)
+																		])),
+																	elm$html$Html$Events$onClick(
+																	l.isChosen ? author$project$Main$UnclickFolder(l.name) : author$project$Main$ClickFolder(l.name))
+																]),
+															_List_fromArray(
+																[
+																	elm$html$Html$text(l.name)
+																]))
+														]));
+											},
+											A2(author$project$Main$computeFolders, model.folders, model.chosenFolders))),
+										A2(
 										elm$html$Html$input,
 										_List_fromArray(
 											[
@@ -5450,37 +5490,6 @@ var author$project$Main$view = function (model) {
 													model.movies))
 											]))
 									]))
-							])),
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A2(
-								elm$html$Html$ul,
-								_List_Nil,
-								A2(
-									elm$core$List$map,
-									function (l) {
-										return A2(
-											elm$html$Html$button,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('button'),
-													elm$html$Html$Attributes$classList(
-													_List_fromArray(
-														[
-															_Utils_Tuple2('is-primary', l.isChosen)
-														])),
-													elm$html$Html$Events$onClick(
-													l.isChosen ? author$project$Main$UnclickFolder(l.name) : author$project$Main$ClickFolder(l.name))
-												]),
-											_List_fromArray(
-												[
-													elm$html$Html$text(l.name)
-												]));
-									},
-									A2(author$project$Main$computeFolders, model.folders, model.chosenFolders)))
 							]))
 					]))
 			]));

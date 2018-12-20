@@ -126,6 +126,7 @@ sendClickFolder folder =
     in
     toBackEnd str
 
+
 sendUnclickFolder : String -> Cmd Msg
 sendUnclickFolder folder =
     let
@@ -164,7 +165,7 @@ update msg model =
 
         UnclickFolder folder ->
             ( model, sendUnclickFolder folder )
-            
+
         UpdateChosenFolders folders ->
             ( { model | chosenFolders = folders }, Cmd.none )
 
@@ -240,7 +241,27 @@ view model =
             [ div [ class "columns" ]
                 [ div [ class "column", class "is-one-quarter", class "has-text-centered" ] [ button [ class "button", onClick ChooseFolder ] [ text "Choose Folder" ] ]
                 , div [ class "column" ]
-                    [ input [ class "input", class "is-primary", placeholder "Search", value model.search, onInput Search ] []
+                    [ div [ class "columns", class "is-centered", class "is-multiline" ]
+                        (List.map
+                            (\l ->
+                                div [ class "column", class "is-narrow" ]
+                                    [ button
+                                        [ class "button"
+                                        , classList [ ( "is-primary", l.isChosen ) ]
+                                        , onClick
+                                            (if l.isChosen then
+                                                UnclickFolder l.name
+
+                                             else
+                                                ClickFolder l.name
+                                            )
+                                        ]
+                                        [ text l.name ]
+                                    ]
+                            )
+                            (computeFolders model.folders model.chosenFolders)
+                        )
+                    , input [ class "input", class "is-primary", placeholder "Search", value model.search, onInput Search ] []
                     , div [ class "content" ]
                         [ ul [ class "unstyled" ]
                             (List.map
@@ -263,7 +284,6 @@ view model =
                         ]
                     ]
                 ]
-            , div [] [ ul [] (List.map (\l -> button [ class "button", classList [ ( "is-primary", l.isChosen ) ], onClick ( if l.isChosen then UnclickFolder l.name else ClickFolder l.name) ] [ text l.name ]) (computeFolders model.folders model.chosenFolders)) ]
             ]
         ]
 
