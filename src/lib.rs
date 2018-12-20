@@ -27,7 +27,13 @@ impl<T> Cache<T> {
     }
 
     pub fn get_data_from_storage(&self) -> String {
-        let mut file = File::open(CACHE_FILENAME).expect("file not found");
+        let mut file = match File::open(CACHE_FILENAME) {
+            Ok(file) => file,
+            Err(_) => { 
+                self.write(String::from(""));
+                File::open(CACHE_FILENAME).expect("could not initialize cache")
+            }
+        };
 
         let mut contents = String::new();
         file.read_to_string(&mut contents)
