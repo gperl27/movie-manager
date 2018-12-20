@@ -113,13 +113,27 @@ impl Cache<Movie> {
         folders
     }
 
-    // make trait for iteratable for Movie
-    fn search_files(&mut self, search: &str) -> Vec<&Movie> {
+    fn search_files(&mut self, search: &str, folders: &Vec<String>) -> Vec<&Movie> {
         let files = self.get_files();
         let search = &search.to_lowercase();
-        let mut found_files = vec![];
+
+        let mut found_folder_files = vec![];
 
         for file in files.into_iter() {
+            if folders.len() == 0 {
+                found_folder_files.push(file);
+            }
+
+            for folder in folders.iter() {
+                if file.folder == *folder {
+                    found_folder_files.push(file);
+                }
+            }
+        }
+
+        let mut found_files = vec![];
+
+        for file in found_folder_files.into_iter() {
             if file.filename.to_lowercase().contains(search) {
                 found_files.push(file);
             }
@@ -232,7 +246,7 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache.search_files(&keyword),
+                            movies: &cache.search_files(&keyword, &state.get_folders()),
                         },
                     );
                     send_to_ui(
@@ -257,7 +271,8 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache.search_files(&state.search_keyword),
+                            movies: &cache
+                                .search_files(&state.search_keyword, &state.get_folders()),
                         },
                     );
 
@@ -274,7 +289,8 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache.search_files(&state.search_keyword),
+                            movies: &cache
+                                .search_files(&state.search_keyword, &state.get_folders()),
                         },
                     );
 
