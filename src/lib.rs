@@ -1,10 +1,8 @@
-extern crate glob;
-extern crate open;
-
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-
+extern crate glob;
+extern crate open;
 extern crate web_view;
 
 use std::fs;
@@ -55,6 +53,7 @@ impl Cache<Movie> {
     pub fn initialize(&mut self) {
         let data = self.get_data_from_storage();
 
+        // return a new vec if our cache is improper
         let movies: Box<Vec<Movie>> = match serde_json::from_str(&data) {
             Ok(data) => data,
             Err(_) => Box::new(vec![]),
@@ -68,6 +67,7 @@ impl Cache<Movie> {
     }
 
     pub fn get_files(&mut self) -> &Vec<Movie> {
+        // before returning files, update if it exists on the system
         for file in self.data.iter_mut() {
             let path = Path::new(&file.filepath);
             if !path.exists() {
