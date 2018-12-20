@@ -34,7 +34,6 @@ fn main() {
                             String::from(cloned_path.file_name().unwrap().to_str().unwrap());
 
                         let mut path = path.into_os_string().into_string().unwrap();
-                        println!("{:?}", path);
                         &path.push_str("/*.mp4");
 
                         for entry in glob(&path).unwrap() {
