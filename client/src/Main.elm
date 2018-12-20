@@ -29,14 +29,20 @@ type alias Movie =
     { filename : String, filepath : String, exists : Bool, folder : String }
 
 
+type alias Folder =
+    { name : String, isChosen : Bool }
+
+
 type alias Model =
-    { movies : List Movie, search : String }
+    { movies : List Movie, search : String, folders : List String, chosenFolders : List String }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { movies = []
       , search = ""
+      , folders = []
+      , chosenFolders = []
       }
     , sendSearch ""
     )
@@ -51,6 +57,10 @@ type Msg
     | Search String
     | Play Movie
     | JSONData (List Movie)
+    | UpdateFolders (List String)
+    | ClickFolder String
+    | UnclickFolder String
+    | UpdateChosenFolders (List String)
 
 
 sendOpenFolder : Cmd Msg
@@ -102,6 +112,35 @@ sendPlayMovie movie =
     toBackEnd str
 
 
+sendClickFolder : String -> Cmd Msg
+sendClickFolder folder =
+    let
+        json =
+            JE.object
+                [ ( "_type", JE.string "ClickFolder" )
+                , ( "folder", JE.string folder )
+                ]
+
+        str =
+            JE.encode 0 json
+    in
+    toBackEnd str
+
+sendUnclickFolder : String -> Cmd Msg
+sendUnclickFolder folder =
+    let
+        json =
+            JE.object
+                [ ( "_type", JE.string "UnclickFolder" )
+                , ( "folder", JE.string folder )
+                ]
+
+        str =
+            JE.encode 0 json
+    in
+    toBackEnd str
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -117,6 +156,18 @@ update msg model =
         JSONData data ->
             ( { model | movies = data }, Cmd.none )
 
+        UpdateFolders folders ->
+            ( { model | folders = folders }, Cmd.none )
+
+        ClickFolder folder ->
+            ( model, sendClickFolder folder )
+
+        UnclickFolder folder ->
+            ( model, sendUnclickFolder folder )
+            
+        UpdateChosenFolders folders ->
+            ( { model | chosenFolders = folders }, Cmd.none )
+
 
 
 -- Subscriptions
@@ -127,14 +178,59 @@ subscriptions model =
     toFrontEnd decodeValue
 
 
-decodeValue : JE.Value -> Msg
-decodeValue raw =
-    case JD.decodeValue movieListDecoder raw of
+movieListToMsg : JE.Value -> Msg
+movieListToMsg raw =
+    case JD.decodeValue (JD.field "movies" movieListDecoder) raw of
         Ok movies ->
             JSONData movies
 
         Err error ->
             JSONData []
+
+
+decodeValue : JE.Value -> Msg
+decodeValue raw =
+    let
+        object_type =
+            JD.decodeValue (JD.field "data" JD.string) raw
+    in
+    case object_type of
+        Ok "Search" ->
+            movieListToMsg raw
+
+        Ok "OpenFolder" ->
+            movieListToMsg raw
+
+        Ok "Folders" ->
+            case JD.decodeValue (JD.field "folders" (JD.list string)) raw of
+                Ok folders ->
+                    UpdateFolders folders
+
+                Err error ->
+                    UpdateFolders []
+
+        Ok "ChosenFolders" ->
+            case JD.decodeValue (JD.field "chosen_folders" (JD.list string)) raw of
+                Ok folders ->
+                    UpdateChosenFolders folders
+
+                Err error ->
+                    UpdateChosenFolders []
+
+        Ok unknown_type ->
+            JSONData []
+
+        Err error ->
+            JSONData []
+
+
+
+-- VIEW
+
+
+computeFolders : List String -> List String -> List Folder
+computeFolders allFolders chosenFolders =
+    List.map (\x -> { name = x, isChosen = List.member x chosenFolders }) allFolders
 
 
 view : Model -> Html Msg
@@ -167,6 +263,7 @@ view model =
                         ]
                     ]
                 ]
+            , div [] [ ul [] (List.map (\l -> button [ class "button", classList [ ( "is-primary", l.isChosen ) ], onClick ( if l.isChosen then UnclickFolder l.name else ClickFolder l.name) ] [ text l.name ]) (computeFolders model.folders model.chosenFolders)) ]
             ]
         ]
 

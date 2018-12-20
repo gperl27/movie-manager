@@ -13,7 +13,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::path::PathBuf;
-use std::ffi::OsStr;
 use web_view::*;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -22,6 +21,8 @@ enum Action {
     OpenFolder,
     Search { keyword: String },
     Play { movie: Movie },
+    ClickFolder { folder: String },
+    UnclickFolder { folder: String },
 }
 
 struct Cache<T> {
@@ -42,7 +43,7 @@ impl<T> Cache<T> {
         file.read_to_string(&mut contents)
             .expect("something went wrong reading the file");
 
-        println!("cache contains: {:?}", contents);
+        // println!("cache contains: {:?}", contents);
 
         contents
     }
@@ -85,7 +86,7 @@ impl Cache<Movie> {
     }
 
     fn insert(&mut self, movie: Movie) {
-        // remove occurence of same filename
+        // remove occurrence of same filename
         // ie. file.mp4 gets moved from USB A to USB B
         let index = self
             .data
@@ -97,6 +98,19 @@ impl Cache<Movie> {
         }
 
         self.data.push(movie);
+    }
+
+    fn get_folders(&mut self) -> Vec<String> {
+        let files = self.get_files();
+        let mut folders = vec![];
+
+        for file in files.iter() {
+            if !folders.contains(&file.folder) {
+                folders.push(file.folder.clone());
+            }
+        }
+
+        folders
     }
 
     // make trait for iteratable for Movie
@@ -115,11 +129,49 @@ impl Cache<Movie> {
     }
 }
 
+#[derive(Serialize, Debug)]
+struct State {
+    chosen_folders: Vec<String>,
+    search_keyword: String,
+}
+
+impl State {
+    fn new() -> State {
+        State {
+            chosen_folders: vec![],
+            search_keyword: String::from(""),
+        }
+    }
+
+    fn get_folders(&self) -> &Vec<String> {
+        &self.chosen_folders
+    }
+
+    fn add_folder(&mut self, folder: String) {
+        if !self.chosen_folders.contains(&folder) {
+            self.chosen_folders.push(folder);
+        }
+    }
+
+    fn remove_folder(&mut self, folder: String) {
+        let index = self.chosen_folders.iter().position(|x| *x == folder);
+
+        if index.is_some() {
+            self.chosen_folders.remove(index.unwrap());
+        }
+    }
+
+    fn update_keyword(&mut self, keyword: &str) {
+        self.search_keyword = keyword.to_string();
+    }
+}
+
 fn main() {
+    let mut state = State::new();
     let mut cache: Cache<Movie> = Cache::new();
     cache.initialize();
 
-    println!("data: {:?}", cache.data);
+    // println!("data: {:?}", cache.data);
 
     let webview = web_view::builder()
         .title("Movie Manager")
@@ -135,8 +187,9 @@ fn main() {
                     .choose_directory("Please choose a folder...", "")?
                 {
                     Some(path) => {
-                        let cloned_path = path.clone(); 
-                        let folder = String::from(cloned_path.file_name().unwrap().to_str().unwrap());
+                        let cloned_path = path.clone();
+                        let folder =
+                            String::from(cloned_path.file_name().unwrap().to_str().unwrap());
 
                         let mut path = path.into_os_string().into_string().unwrap();
                         println!("{:?}", path);
@@ -151,17 +204,87 @@ fn main() {
                         // update cache with files found from current folder
                         cache.write(cache.serialize());
 
-                        send_to_ui(webview, &cache.get_files());
+                        send_to_ui(
+                            webview,
+                            &ToUiCommand::OpenFolder {
+                                movies: &cache.get_files(),
+                            },
+                        );
+
+                        send_to_ui(
+                            webview,
+                            &ToUiCommand::Folders {
+                                folders: &cache.get_folders(),
+                            },
+                        );
+
+                        send_to_ui(
+                            webview,
+                            &ToUiCommand::ChosenFolders {
+                                chosen_folders: &state.get_folders(),
+                            },
+                        );
                     }
                     None => println!("Cancelled opening folder"),
                 },
                 Ok(Action::Search { keyword }) => {
-                    send_to_ui(webview, &cache.search_files(&keyword));
+                    state.update_keyword(&keyword);
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::Search {
+                            movies: &cache.search_files(&keyword),
+                        },
+                    );
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::Folders {
+                            folders: &cache.get_folders(),
+                        },
+                    );
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::ChosenFolders {
+                            chosen_folders: &state.get_folders(),
+                        },
+                    );
                 }
                 Ok(Action::Play { movie }) => {
                     movie.play();
                 }
+                Ok(Action::ClickFolder { folder }) => {
+                    state.add_folder(folder);
 
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::Search {
+                            movies: &cache.search_files(&state.search_keyword),
+                        },
+                    );
+
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::ChosenFolders {
+                            chosen_folders: &state.get_folders(),
+                        },
+                    );
+                }
+                Ok(Action::UnclickFolder { folder }) => {
+                    state.remove_folder(folder);
+
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::Search {
+                            movies: &cache.search_files(&state.search_keyword),
+                        },
+                    );
+
+                    send_to_ui(
+                        webview,
+                        &ToUiCommand::ChosenFolders {
+                            chosen_folders: &state.get_folders(),
+                        },
+                    );
+                }
                 Err(error) => println!("Unable to parse [{}] because {}", arg, error),
             }
             Ok(())
@@ -172,7 +295,7 @@ fn main() {
 }
 
 #[derive(Deserialize, Serialize, Debug, Eq, Ord, PartialEq, PartialOrd)]
-struct Movie {
+pub struct Movie {
     filepath: String,
     filename: String,
     exists: bool,
@@ -200,18 +323,28 @@ impl Movie {
     }
 }
 
-fn send_to_ui<'a, S, T>(webview: &mut WebView<'a, T>, data: &S)
+#[derive(Serialize, Debug)]
+#[serde(tag = "data")]
+pub enum ToUiCommand<'a, 'b> {
+    Folders { folders: &'b Vec<String> },
+    OpenFolder { movies: &'a Vec<Movie> },
+    Search { movies: &'a Vec<&'a Movie> },
+    ChosenFolders { chosen_folders: &'b Vec<String> },
+}
+
+pub fn send_to_ui<'a, S, T>(webview: &mut WebView<'a, T>, data: &S)
 where
     S: serde::ser::Serialize,
 {
-    let render_movies = {
-        let data = serde_json::to_string(&data).unwrap();
-
-        format!("toFrontEnd({})", data)
+    let data2 = serde_json::to_string(data);
+    println!("data: {:?}", data2);
+    match serde_json::to_string(data) {
+        Ok(json) => match webview.eval(&format!("toFrontEnd({})", json)) {
+            Ok(_) => println!("Sent to UI"),
+            Err(error) => println!("failed to send to ui because {}", error),
+        },
+        Err(error) => println!("failed to serialize for ui because {}", error),
     };
-
-    println!("{:#?}", &render_movies);
-    webview.eval(&render_movies).unwrap();
 }
 
 fn create_html() -> String {

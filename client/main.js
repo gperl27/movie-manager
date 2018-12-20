@@ -4816,11 +4816,17 @@ var author$project$Main$sendSearch = function (keyword) {
 };
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		{movies: _List_Nil, search: ''},
+		{chosenFolders: _List_Nil, folders: _List_Nil, movies: _List_Nil, search: ''},
 		author$project$Main$sendSearch(''));
 };
 var author$project$Main$JSONData = function (a) {
 	return {$: 'JSONData', a: a};
+};
+var author$project$Main$UpdateChosenFolders = function (a) {
+	return {$: 'UpdateChosenFolders', a: a};
+};
+var author$project$Main$UpdateFolders = function (a) {
+	return {$: 'UpdateFolders', a: a};
 };
 var author$project$Main$Movie = F4(
 	function (filename, filepath, exists, folder) {
@@ -4840,8 +4846,11 @@ var author$project$Main$movieDecoder = A5(
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$movieListDecoder = elm$json$Json$Decode$list(author$project$Main$movieDecoder);
 var elm$json$Json$Decode$decodeValue = _Json_run;
-var author$project$Main$decodeValue = function (raw) {
-	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$movieListDecoder, raw);
+var author$project$Main$movieListToMsg = function (raw) {
+	var _n0 = A2(
+		elm$json$Json$Decode$decodeValue,
+		A2(elm$json$Json$Decode$field, 'movies', author$project$Main$movieListDecoder),
+		raw);
 	if (_n0.$ === 'Ok') {
 		var movies = _n0.a;
 		return author$project$Main$JSONData(movies);
@@ -4850,10 +4859,74 @@ var author$project$Main$decodeValue = function (raw) {
 		return author$project$Main$JSONData(_List_Nil);
 	}
 };
+var author$project$Main$decodeValue = function (raw) {
+	var object_type = A2(
+		elm$json$Json$Decode$decodeValue,
+		A2(elm$json$Json$Decode$field, 'data', elm$json$Json$Decode$string),
+		raw);
+	if (object_type.$ === 'Ok') {
+		switch (object_type.a) {
+			case 'Search':
+				return author$project$Main$movieListToMsg(raw);
+			case 'OpenFolder':
+				return author$project$Main$movieListToMsg(raw);
+			case 'Folders':
+				var _n1 = A2(
+					elm$json$Json$Decode$decodeValue,
+					A2(
+						elm$json$Json$Decode$field,
+						'folders',
+						elm$json$Json$Decode$list(elm$json$Json$Decode$string)),
+					raw);
+				if (_n1.$ === 'Ok') {
+					var folders = _n1.a;
+					return author$project$Main$UpdateFolders(folders);
+				} else {
+					var error = _n1.a;
+					return author$project$Main$UpdateFolders(_List_Nil);
+				}
+			case 'ChosenFolders':
+				var _n2 = A2(
+					elm$json$Json$Decode$decodeValue,
+					A2(
+						elm$json$Json$Decode$field,
+						'chosen_folders',
+						elm$json$Json$Decode$list(elm$json$Json$Decode$string)),
+					raw);
+				if (_n2.$ === 'Ok') {
+					var folders = _n2.a;
+					return author$project$Main$UpdateChosenFolders(folders);
+				} else {
+					var error = _n2.a;
+					return author$project$Main$UpdateChosenFolders(_List_Nil);
+				}
+			default:
+				var unknown_type = object_type.a;
+				return author$project$Main$JSONData(_List_Nil);
+		}
+	} else {
+		var error = object_type.a;
+		return author$project$Main$JSONData(_List_Nil);
+	}
+};
 var elm$json$Json$Decode$value = _Json_decodeValue;
 var author$project$Main$toFrontEnd = _Platform_incomingPort('toFrontEnd', elm$json$Json$Decode$value);
 var author$project$Main$subscriptions = function (model) {
 	return author$project$Main$toFrontEnd(author$project$Main$decodeValue);
+};
+var author$project$Main$sendClickFolder = function (folder) {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('ClickFolder')),
+				_Utils_Tuple2(
+				'folder',
+				elm$json$Json$Encode$string(folder))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
 };
 var author$project$Main$sendOpenFolder = function () {
 	var json = elm$json$Json$Encode$object(
@@ -4896,6 +4969,20 @@ var author$project$Main$sendPlayMovie = function (movie) {
 	var str = A2(elm$json$Json$Encode$encode, 0, json);
 	return author$project$Main$toBackEnd(str);
 };
+var author$project$Main$sendUnclickFolder = function (folder) {
+	var json = elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'_type',
+				elm$json$Json$Encode$string('UnclickFolder')),
+				_Utils_Tuple2(
+				'folder',
+				elm$json$Json$Encode$string(folder))
+			]));
+	var str = A2(elm$json$Json$Encode$encode, 0, json);
+	return author$project$Main$toBackEnd(str);
+};
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$update = F2(
@@ -4915,23 +5002,52 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					model,
 					author$project$Main$sendPlayMovie(movie));
-			default:
+			case 'JSONData':
 				var data = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{movies: data}),
 					elm$core$Platform$Cmd$none);
+			case 'UpdateFolders':
+				var folders = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{folders: folders}),
+					elm$core$Platform$Cmd$none);
+			case 'ClickFolder':
+				var folder = msg.a;
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$sendClickFolder(folder));
+			case 'UnclickFolder':
+				var folder = msg.a;
+				return _Utils_Tuple2(
+					model,
+					author$project$Main$sendUnclickFolder(folder));
+			default:
+				var folders = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{chosenFolders: folders}),
+					elm$core$Platform$Cmd$none);
 		}
 	});
 var author$project$Main$ChooseFolder = {$: 'ChooseFolder'};
+var author$project$Main$ClickFolder = function (a) {
+	return {$: 'ClickFolder', a: a};
+};
 var author$project$Main$Play = function (a) {
 	return {$: 'Play', a: a};
 };
 var author$project$Main$Search = function (a) {
 	return {$: 'Search', a: a};
 };
-var elm$core$Basics$not = _Basics_not;
+var author$project$Main$UnclickFolder = function (a) {
+	return {$: 'UnclickFolder', a: a};
+};
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -5001,6 +5117,49 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
+var elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var author$project$Main$computeFolders = F2(
+	function (allFolders, chosenFolders) {
+		return A2(
+			elm$core$List$map,
+			function (x) {
+				return {
+					isChosen: A2(elm$core$List$member, x, chosenFolders),
+					name: x
+				};
+			},
+			allFolders);
+	});
+var elm$core$Basics$not = _Basics_not;
 var elm$core$Basics$identity = function (x) {
 	return x;
 };
@@ -5037,6 +5196,31 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2(elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var elm$core$Tuple$second = function (_n0) {
+	var y = _n0.b;
+	return y;
+};
+var elm$html$Html$Attributes$classList = function (classes) {
+	return elm$html$Html$Attributes$class(
+		A2(
+			elm$core$String$join,
+			' ',
+			A2(
+				elm$core$List$map,
+				elm$core$Tuple$first,
+				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
+};
 var elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -5266,6 +5450,37 @@ var author$project$Main$view = function (model) {
 													model.movies))
 											]))
 									]))
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$ul,
+								_List_Nil,
+								A2(
+									elm$core$List$map,
+									function (l) {
+										return A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button'),
+													elm$html$Html$Attributes$classList(
+													_List_fromArray(
+														[
+															_Utils_Tuple2('is-primary', l.isChosen)
+														])),
+													elm$html$Html$Events$onClick(
+													l.isChosen ? author$project$Main$UnclickFolder(l.name) : author$project$Main$ClickFolder(l.name))
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text(l.name)
+												]));
+									},
+									A2(author$project$Main$computeFolders, model.folders, model.chosenFolders)))
 							]))
 					]))
 			]));
