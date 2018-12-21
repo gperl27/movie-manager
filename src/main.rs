@@ -243,20 +243,14 @@ fn create_html() -> String {
     </html>
     "#,
         elmJs = if is_in_production() {
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/client/main.min.js"))
+            include_str!("client/main.min.js")
         } else {
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/client/main.js"))
+            include_str!("client/main.js")
         },
         portsJs = PORTS_JS,
-        bulma = include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/client/vendor/bulma-0.7.2/css/bulma.min.css"
-        )),
-        fontAwesome = include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"
-        )),
-        customCss = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/client/main.css"))
+        bulma = include_str!("client/vendor/bulma-0.7.2/css/bulma.min.css"),
+        fontAwesome = include_str!("client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
+        customCss = include_str!("client/main.css")
     )
 }
 
