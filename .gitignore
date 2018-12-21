@@ -6,3 +6,4 @@ src/client/main.js
 src/client/main.min.js
 .DS_Store
 .cache.json
+.env
