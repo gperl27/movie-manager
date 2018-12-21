@@ -11,7 +11,7 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::path::PathBuf;
 
-static CACHE_FILENAME: &'static str = ".cache";
+static CACHE_FILENAME: &'static str = ".cache.json";
 
 pub struct Cache<T> {
     data: Box<Vec<T>>,
@@ -45,6 +45,7 @@ impl<T> Cache<T> {
     }
 
     pub fn write(&self, data: String) {
+        println!("{}", CACHE_FILENAME);
         fs::write(CACHE_FILENAME, data).expect("could not write to cache");
     }
 }
