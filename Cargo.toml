@@ -1,7 +1,7 @@
 [package]
 name = "movie_manager"
 description = "An interface for managing separate folders of video files."
-version = "0.0.1"
+version = "0.0.2"
 authors = ["greg <gperlman27@gmail.com>"]
 
 [lib]
