@@ -2,5 +2,7 @@
 **/*.rs.bk
 /client/elm-stuff
 /client/vendor
+/client/main.js
+/client/main.min.js
 .DS_Store
-.cache
+.cache.json

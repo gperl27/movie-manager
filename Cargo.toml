@@ -1,5 +1,5 @@
 [package]
-name = "movie_maker"
+name = "movie_manager"
 description = "An interface for managing separate folders of video files."
 version = "1.0.0"
 authors = ["greg <gperlman27@gmail.com>"]
@@ -15,12 +15,5 @@ serde_json = "1.0.33"
 serde_derive = "1.0.82"
 serde = "1.0.82"
 open = "1.2.2"
-itertools = "0.8.0"
-
-[package.metadata.bundle]
-name = "Movie Manager"
-identifier = "com.gpnovus.moviemanager"
-version = "1.0.0"
-resources = ["client"]
-copyright = "Copyright (c) Greg Perlamn 2018. All rights reserved."
-short_description = "An interface for managing separate folders of video files."
+dotenv = "0.13.0"
+dotenv_codegen = "0.11.0"

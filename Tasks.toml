@@ -1,0 +1,7 @@
+[tasks.optimize_frontend]
+script = [
+    "cd client && ./optimize.sh src/Main.elm"
+]
+
+[tasks.build_frontend]
+run_task = "optimize_frontend"

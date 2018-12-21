@@ -6,11 +6,25 @@ extern crate open;
 extern crate serde_json;
 extern crate web_view;
 
+extern crate dotenv;
+
+use dotenv::dotenv;
+use std::env;
+
 use glob::glob;
 use lib::*;
 use web_view::*;
 
+fn is_in_production() -> bool {
+    match env::var("PRODUCTION") {
+        Ok(val) => val == "true",
+        Err(_) => false
+    }
+}
+
 fn main() {
+    dotenv().ok();
+
     let mut state = State::new();
     let mut cache: Cache<Movie> = Cache::new();
     cache.initialize();
@@ -228,7 +242,11 @@ fn create_html() -> String {
     </body>
     </html>
     "#,
-        elmJs = include_str!("../client/main.js"),
+        elmJs = if is_in_production() {
+            include_str!("../client/main.min.js")
+        } else {
+            include_str!("../client/main.js")
+        },
         portsJs = PORTS_JS,
         bulma = include_str!("../client/vendor/bulma-0.7.2/css/bulma.min.css"),
         fontAwesome = include_str!("../client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
