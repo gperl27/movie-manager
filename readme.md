@@ -7,12 +7,9 @@ Movie Manager keeps track of your movie files and where they come from. The app 
 
 ## Requirements
 
-- Rust (and Cargo)
+- Rust
 - Elm
-- Grunt (for frontend optimization)
-- wget
-- tar
-- unzip
+- Uglify-js
 
 
 ## Installation
