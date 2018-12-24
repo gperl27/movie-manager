@@ -1,7 +1,9 @@
+//#![windows_subsystem = "windows"]
 #[macro_use]
 extern crate serde_derive;
 extern crate glob;
 extern crate lib;
+extern crate nfd;
 extern crate open;
 extern crate serde_json;
 extern crate web_view;
@@ -13,6 +15,8 @@ use std::env;
 
 use glob::glob;
 use lib::*;
+use nfd::Response;
+use std::path::PathBuf;
 use web_view::*;
 
 fn is_in_production() -> bool {
@@ -38,50 +42,55 @@ fn main() {
         .user_data(())
         .invoke_handler(|webview, arg| {
             match serde_json::from_str(arg) {
-                Ok(Action::OpenFolder) => match webview
-                    .dialog()
-                    .choose_directory("Please choose a folder...", "")?
-                {
-                    Some(path) => {
-                        let cloned_path = path.clone();
-                        let folder =
-                            String::from(cloned_path.file_name().unwrap().to_str().unwrap());
+                Ok(Action::OpenFolder) => {
+                    let result = nfd::open_pick_folder(None).unwrap_or_else(|e| {
+                        panic!(e);
+                    });
 
-                        let mut path = path.into_os_string().into_string().unwrap();
-                        &path.push_str("/*.mp4");
+                    match result {
+                        Response::Okay(path) => {
+                            let path = PathBuf::from(path);
+                            let cloned_path = path.clone();
+                            let folder =
+                                String::from(cloned_path.file_name().unwrap().to_str().unwrap());
 
-                        for entry in glob(&path).unwrap() {
-                            let movie = Movie::new(entry.unwrap(), &folder);
+                            let mut path = path.into_os_string().into_string().unwrap();
+                            &path.push_str("/*.mp4");
 
-                            cache.insert(movie);
+                            for entry in glob(&path).unwrap() {
+                                let movie = Movie::new(entry.unwrap(), &folder);
+
+                                cache.insert(movie);
+                            }
+
+                            // update cache with files found from current folder
+                            cache.write(cache.serialize());
+
+                            send_to_ui(
+                                webview,
+                                &ToUiCommand::OpenFolder {
+                                    movies: &cache.get_files(),
+                                },
+                            );
+
+                            send_to_ui(
+                                webview,
+                                &ToUiCommand::Folders {
+                                    folders: &cache.get_folders(),
+                                },
+                            );
+
+                            send_to_ui(
+                                webview,
+                                &ToUiCommand::ChosenFolders {
+                                    chosen_folders: &state.get_folders(),
+                                },
+                            );
                         }
-
-                        // update cache with files found from current folder
-                        cache.write(cache.serialize());
-
-                        send_to_ui(
-                            webview,
-                            &ToUiCommand::OpenFolder {
-                                movies: &cache.get_files(),
-                            },
-                        );
-
-                        send_to_ui(
-                            webview,
-                            &ToUiCommand::Folders {
-                                folders: &cache.get_folders(),
-                            },
-                        );
-
-                        send_to_ui(
-                            webview,
-                            &ToUiCommand::ChosenFolders {
-                                chosen_folders: &state.get_folders(),
-                            },
-                        );
+                        Response::Cancel => println!("Cancelled opening folder"),
+                        _ => (),
                     }
-                    None => println!("Cancelled opening folder"),
-                },
+                }
                 Ok(Action::Search { keyword }) => {
                     state.update_keyword(&keyword);
                     send_to_ui(
@@ -145,7 +154,8 @@ fn main() {
                 Err(error) => println!("Unable to parse [{}] because {}", arg, error),
             }
             Ok(())
-        }).build()
+        })
+        .build()
         .unwrap();
 
     webview.run().unwrap();
@@ -237,6 +247,7 @@ fn create_html() -> String {
             {elmJs}
             {portsJs}
             {fontAwesome}
+            {fontAwesome2}
         </script> 
         
     </body>
@@ -249,7 +260,9 @@ fn create_html() -> String {
         },
         portsJs = PORTS_JS,
         bulma = include_str!("client/vendor/bulma-0.7.2/css/bulma.min.css"),
-        fontAwesome = include_str!("client/vendor/fontawesome-free-5.6.1-web/js/all.min.js"),
+        fontAwesome =
+            include_str!("client/vendor/fontawesome-free-5.6.1-web/js/fontawesome.min.js"),
+        fontAwesome2 = include_str!("client/vendor/fontawesome-free-5.6.1-web/js/solid.min.js"),
         customCss = include_str!("client/main.css")
     )
 }
