@@ -2,11 +2,12 @@
 
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate glob;
 extern crate open;
+extern crate serde_json;
 extern crate web_view;
 
+use glob::glob;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -29,7 +30,7 @@ impl<T> Cache<T> {
     pub fn get_data_from_storage(&self) -> String {
         let mut file = match File::open(CACHE_FILENAME) {
             Ok(file) => file,
-            Err(_) => { 
+            Err(_) => {
                 self.write(String::from(""));
                 File::open(CACHE_FILENAME).expect("could not initialize cache")
             }
@@ -137,6 +138,17 @@ impl Cache<Movie> {
         }
 
         found_files
+    }
+
+    pub fn update_cache_from_directory(&mut self, path: &str, folder: &String) {
+        for entry in glob(path).unwrap() {
+            let movie = Movie::new(entry.unwrap(), folder);
+
+            self.insert(movie);
+        }
+
+        // update self with files found from current folder
+        self.write(self.serialize());
     }
 }
 

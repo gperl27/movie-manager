@@ -1,6 +1,7 @@
 //#![windows_subsystem = "windows"]
 #[macro_use]
 extern crate serde_derive;
+extern crate dotenv;
 extern crate glob;
 extern crate lib;
 extern crate nfd;
@@ -8,14 +9,10 @@ extern crate open;
 extern crate serde_json;
 extern crate web_view;
 
-extern crate dotenv;
-
 use dotenv::dotenv;
-use std::env;
-
-use glob::glob;
 use lib::*;
 use nfd::Response;
+use std::env;
 use std::path::PathBuf;
 use web_view::*;
 
@@ -57,14 +54,7 @@ fn main() {
                             let mut path = path.into_os_string().into_string().unwrap();
                             &path.push_str("/*.mp4");
 
-                            for entry in glob(&path).unwrap() {
-                                let movie = Movie::new(entry.unwrap(), &folder);
-
-                                cache.insert(movie);
-                            }
-
-                            // update cache with files found from current folder
-                            cache.write(cache.serialize());
+                            cache.update_cache_from_directory(&path, &folder);
 
                             send_to_ui(
                                 webview,
