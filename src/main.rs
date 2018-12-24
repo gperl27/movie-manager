@@ -35,7 +35,7 @@ fn main() {
         .content(Content::Html(create_html()))
         .size(800, 800)
         .resizable(true)
-        .debug(true)
+        .debug(false)
         .user_data(())
         .invoke_handler(|webview, arg| {
             match serde_json::from_str(arg) {
