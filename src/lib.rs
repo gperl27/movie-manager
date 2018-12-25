@@ -142,9 +142,14 @@ impl Cache<Movie> {
 
     pub fn update_cache_from_directory(&mut self, path: &str, folder: &String) {
         for entry in glob(path).unwrap() {
-            let movie = Movie::new(entry.unwrap(), folder);
+            match entry {
+                Ok(path) => {
+                    let movie = Movie::new(path, folder);
 
-            self.insert(movie);
+                    self.insert(movie);
+                }
+                Err(e) => println!("{:?}", e),
+            }
         }
 
         // update self with files found from current folder

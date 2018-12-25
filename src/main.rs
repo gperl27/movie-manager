@@ -52,9 +52,16 @@ fn main() {
                                 String::from(cloned_path.file_name().unwrap().to_str().unwrap());
 
                             let mut path = path.into_os_string().into_string().unwrap();
-                            &path.push_str("/*.mp4");
 
-                            cache.update_cache_from_directory(&path, &folder);
+                            let matchers = ["mp4", "mkv", "avi"];
+
+                            for matcher in matchers.iter() {
+                                let mut path = path.clone();
+                                println!("cloned path: {}", &path);
+                                &path.push_str(&format!("/**/*.{}", &matcher));
+
+                                cache.update_cache_from_directory(&path, &folder);
+                            }
 
                             send_to_ui(
                                 webview,
