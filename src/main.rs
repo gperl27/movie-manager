@@ -48,8 +48,17 @@ fn main() {
                         Response::Okay(path) => {
                             let path = PathBuf::from(path);
                             let cloned_path = path.clone();
-                            let folder =
-                                String::from(cloned_path.file_name().unwrap().to_str().unwrap());
+
+                            println!("path: {:?}", cloned_path);
+
+                            // return just the path if we have a top-level drive
+                            // such as F:/ or E:/
+                            let folderpath = match cloned_path.file_name() {
+                                Some(folderpath) => folderpath,
+                                None => cloned_path.as_os_str(),
+                            };
+
+                            let folder = String::from(folderpath.to_str().unwrap());
 
                             let mut path = path.into_os_string().into_string().unwrap();
 
@@ -57,7 +66,6 @@ fn main() {
 
                             for matcher in matchers.iter() {
                                 let mut path = path.clone();
-                                println!("cloned path: {}", &path);
                                 &path.push_str(&format!("/**/*.{}", &matcher));
 
                                 cache.update_cache_from_directory(&path, &folder);
