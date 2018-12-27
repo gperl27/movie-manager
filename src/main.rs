@@ -49,8 +49,6 @@ fn main() {
                             let path = PathBuf::from(path);
                             let cloned_path = path.clone();
 
-                            println!("path: {:?}", cloned_path);
-
                             // return just the path if we have a top-level drive
                             // such as F:/ or E:/
                             let folderpath = match cloned_path.file_name() {
@@ -101,7 +99,7 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache.search_files(&keyword, &state.get_folders()),
+                            movies: cache.search_files(&keyword, &state.get_folders()),
                         },
                     );
                     send_to_ui(
@@ -126,8 +124,7 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache
-                                .search_files(&state.search_keyword, &state.get_folders()),
+                            movies: cache.search_files(&state.search_keyword, &state.get_folders()),
                         },
                     );
 
@@ -144,8 +141,7 @@ fn main() {
                     send_to_ui(
                         webview,
                         &ToUiCommand::Search {
-                            movies: &cache
-                                .search_files(&state.search_keyword, &state.get_folders()),
+                            movies: cache.search_files(&state.search_keyword, &state.get_folders()),
                         },
                     );
 
@@ -159,8 +155,7 @@ fn main() {
                 Err(error) => println!("Unable to parse [{}] because {}", arg, error),
             }
             Ok(())
-        })
-        .build()
+        }).build()
         .unwrap();
 
     webview.run().unwrap();
@@ -181,7 +176,7 @@ enum Action {
 pub enum ToUiCommand<'a, 'b> {
     Folders { folders: &'b Vec<String> },
     OpenFolder { movies: &'a Vec<Movie> },
-    Search { movies: &'a Vec<&'a Movie> },
+    Search { movies: Vec<Movie> },
     ChosenFolders { chosen_folders: &'b Vec<String> },
 }
 

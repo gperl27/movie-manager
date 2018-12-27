@@ -48,7 +48,6 @@ impl<T> Cache<T> {
     }
 
     pub fn write(&self, data: String) {
-        println!("{}", CACHE_FILENAME);
         fs::write(CACHE_FILENAME, data).expect("could not write to cache");
     }
 }
@@ -111,33 +110,35 @@ impl Cache<Movie> {
         folders
     }
 
-    pub fn search_files(&mut self, search: &str, folders: &Vec<String>) -> Vec<&Movie> {
-        let files = self.get_files();
+    // clone here so we don't mutate our base cache
+    pub fn search_files(&mut self, search: &str, folders: &Vec<String>) -> Vec<Movie> {
+        let files = self.get_files().clone();
         let search = &search.to_lowercase();
 
-        let mut found_folder_files = vec![];
+        let found_files: Vec<Movie> = files
+            .iter()
+            .cloned()
+            .filter(|x| x.filename.to_lowercase().contains(search))
+            .collect();
 
-        for file in files.into_iter() {
-            if folders.len() == 0 {
-                found_folder_files.push(file);
-            }
+        let mut found_folder_files = vec![];
+        let no_filters_selected = folders.len() == 0;
+
+        for file in found_files.iter().cloned() {
+            let mut has_folder = false;
 
             for folder in folders.iter() {
                 if file.folder == *folder {
-                    found_folder_files.push(file);
+                    has_folder = true;
                 }
             }
-        }
 
-        let mut found_files = vec![];
-
-        for file in found_folder_files.into_iter() {
-            if file.filename.to_lowercase().contains(search) {
-                found_files.push(file);
+            if no_filters_selected || has_folder {
+                found_folder_files.push(file);
             }
         }
 
-        found_files
+        found_folder_files
     }
 
     pub fn update_cache_from_directory(&mut self, path: &str, folder: &String) {
@@ -157,7 +158,7 @@ impl Cache<Movie> {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Deserialize, Serialize, Debug, Eq, Ord, PartialEq, PartialOrd, Clone)]
 pub struct Movie {
     filepath: String,
     filename: String,
