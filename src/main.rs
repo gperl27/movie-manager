@@ -178,6 +178,7 @@ pub enum ToUiCommand<'a, 'b> {
     OpenFolder { movies: &'a Vec<Movie> },
     Search { movies: Vec<Movie> },
     ChosenFolders { chosen_folders: &'b Vec<String> },
+    Error { error: String },
 }
 
 pub fn send_to_ui<'a, S, T>(webview: &mut WebView<'a, T>, data: &S)

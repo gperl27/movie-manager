@@ -34,7 +34,7 @@ type alias Folder =
 
 
 type alias Model =
-    { movies : List Movie, search : String, folders : List String, chosenFolders : List String }
+    { movies : List Movie, search : String, folders : List String, chosenFolders : List String, error : String }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -43,6 +43,7 @@ init _ =
       , search = ""
       , folders = []
       , chosenFolders = []
+      , error = ""
       }
     , sendSearch ""
     )
@@ -53,7 +54,8 @@ init _ =
 
 
 type Msg
-    = Error
+    = Error String
+    | CloseError
     | ChooseFolder
     | Search String
     | Play Movie
@@ -170,8 +172,11 @@ update msg model =
         UpdateChosenFolders folders ->
             ( { model | chosenFolders = folders }, Cmd.none )
 
-        Error ->
-            ( model, Cmd.none )
+        Error str ->
+            ( { model | error = str }, Cmd.none )
+
+        CloseError ->
+            ( { model | error = "" }, Cmd.none )
 
 
 
@@ -204,7 +209,7 @@ movieListToMsg raw =
             UpdateMovies movies
 
         Err error ->
-            Error
+            Error (JD.errorToString error)
 
 
 decodeValue : JE.Value -> Msg
@@ -226,7 +231,7 @@ decodeValue raw =
                     UpdateFolders folders
 
                 Err error ->
-                    Error
+                    Error (JD.errorToString error)
 
         Ok "ChosenFolders" ->
             case JD.decodeValue (JD.field "chosen_folders" (JD.list string)) raw of
@@ -234,13 +239,21 @@ decodeValue raw =
                     UpdateChosenFolders folders
 
                 Err error ->
-                    Error
+                    Error (JD.errorToString error)
+
+        Ok "Error" ->
+            case JD.decodeValue (JD.field "error" string) raw of
+                Ok error ->
+                    Error error
+
+                Err error ->
+                    Error (JD.errorToString error)
 
         Ok unknown_type ->
-            Error
+            Error "Could not properly get data"
 
         Err error ->
-            Error
+            Error (JD.errorToString error)
 
 
 
@@ -256,7 +269,8 @@ view : Model -> Html Msg
 view model =
     section [ class "section" ]
         [ div [ class "container" ]
-            [ div [ class "columns" ]
+            [ div [ class "notification is-danger", hidden (String.isEmpty model.error) ] [ button [ class "delete", onClick CloseError ] [], text model.error ]
+            , div [ class "columns" ]
                 [ div [ class "column", class "is-one-quarter", class "has-text-centered" ] [ button [ class "button", onClick ChooseFolder ] [ text "Choose Folder" ] ]
                 , div [ class "column" ]
                     [ div [ class "columns", class "is-centered", class "is-multiline" ]
