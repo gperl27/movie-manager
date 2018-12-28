@@ -1,7 +1,6 @@
 //#![windows_subsystem = "windows"]
 #[macro_use]
 extern crate serde_derive;
-extern crate dotenv;
 extern crate glob;
 extern crate lib;
 extern crate nfd;
@@ -9,23 +8,12 @@ extern crate open;
 extern crate serde_json;
 extern crate web_view;
 
-use dotenv::dotenv;
 use lib::*;
 use nfd::Response;
-use std::env;
 use std::path::PathBuf;
 use web_view::*;
 
-fn is_in_production() -> bool {
-    match env::var("PRODUCTION") {
-        Ok(val) => val == "true",
-        Err(_) => false,
-    }
-}
-
 fn main() {
-    dotenv().ok();
-
     let mut state = State::new();
     let mut cache: Cache<Movie> = Cache::new();
     cache.initialize();
@@ -254,11 +242,7 @@ fn create_html() -> String {
     </body>
     </html>
     "#,
-        elmJs = if is_in_production() {
-            include_str!("client/main.min.js")
-        } else {
-            include_str!("client/main.js")
-        },
+        elmJs = include_str!("client/main.min.js") ,
         portsJs = PORTS_JS,
         bulma = include_str!("client/vendor/bulma-0.7.2/css/bulma.min.css"),
         fontAwesome =
