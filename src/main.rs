@@ -242,13 +242,13 @@ fn create_html() -> String {
     </body>
     </html>
     "#,
-        elmJs = include_str!("client/main.min.js") ,
+        elmJs = include_str!("../client/main.min.js") ,
         portsJs = PORTS_JS,
-        bulma = include_str!("client/vendor/bulma-0.7.2/css/bulma.min.css"),
+        bulma = include_str!("../client/vendor/bulma-0.7.2/css/bulma.min.css"),
         fontAwesome =
-            include_str!("client/vendor/fontawesome-free-5.6.1-web/js/fontawesome.min.js"),
-        fontAwesome2 = include_str!("client/vendor/fontawesome-free-5.6.1-web/js/solid.min.js"),
-        customCss = include_str!("client/main.css")
+            include_str!("../client/vendor/fontawesome-free-5.6.1-web/js/fontawesome.min.js"),
+        fontAwesome2 = include_str!("../client/vendor/fontawesome-free-5.6.1-web/js/solid.min.js"),
+        customCss = include_str!("../client/main.css")
     )
 }
 

@@ -1,9 +1,9 @@
 /target
 **/*.rs.bk
-src/client/elm-stuff
-src/client/vendor
-src/client/main.js
-src/client/main.min.js
+/client/elm-stuff
+/client/vendor
+/client/main.js
+/client/main.min.js
 .DS_Store
 .cache.json
 .env
